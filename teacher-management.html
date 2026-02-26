@@ -36,7 +36,7 @@
         <section class="page-head">
           <div>
             <h1 class="page-title">Teacher Management</h1>
-            <p class="page-meta">Manage teacher account access and statuses</p>
+            <p class="page-meta">Manage teacher account access and departments</p>
           </div>
           <button class="btn btn-primary" id="newTeacherBtn">Add Teacher</button>
         </section>
@@ -44,13 +44,37 @@
         <section class="card">
           <div class="table-wrap table-top-gap">
             <table class="table">
-              <thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Action</th></tr></thead>
+              <thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Department</th><th>Action</th></tr></thead>
               <tbody id="teacherTableBody"></tbody>
             </table>
           </div>
         </section>
         <footer class="muted footer-credit">Developed by FumarDev - ARCHIVIA System</footer>
       </main>
+    </div>
+  </div>
+
+  <div class="modal" id="addTeacherModal" role="dialog" aria-modal="true" aria-labelledby="addTeacherTitle">
+    <div class="modal-card">
+      <div class="modal-head"><h3 id="addTeacherTitle">Add Teacher</h3></div>
+      <div class="modal-body form-grid">
+        <div class="form-field">
+          <label class="label" for="teacherFullName">Full Name</label>
+          <input class="input" id="teacherFullName" placeholder="e.g., Sofia Ramos" required />
+        </div>
+        <div class="form-field">
+          <label class="label" for="teacherEmail">Email</label>
+          <input class="input" id="teacherEmail" type="email" placeholder="e.g., s.ramos@archivia.edu" required />
+        </div>
+        <div class="form-field">
+          <label class="label" for="teacherDepartment">Department</label>
+          <input class="input" id="teacherDepartment" placeholder="e.g., SPED" required />
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-secondary" data-modal-close="#addTeacherModal">Cancel</button>
+        <button class="btn btn-primary" id="saveTeacherBtn">Save Teacher</button>
+      </div>
     </div>
   </div>
 

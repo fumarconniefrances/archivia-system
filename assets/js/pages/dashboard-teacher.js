@@ -1,21 +1,7 @@
 document.addEventListener('DOMContentLoaded', async function () {
-  var importBtn = document.getElementById('importBtn');
-  var exportBtn = document.getElementById('exportBtn');
   var searchInput = document.getElementById('globalSearch');
   var allStudents = [];
   var allDocs = [];
-
-  if (importBtn) {
-    importBtn.addEventListener('click', function () {
-      window.ArchiviaUI.showToast('Import workflow is not available in this build.');
-    });
-  }
-
-  if (exportBtn) {
-    exportBtn.addEventListener('click', function () {
-      window.ArchiviaUI.showToast('Export started. Your file will be ready shortly.');
-    });
-  }
 
   function getStudentYear(student) {
     if (typeof student.batchYear === 'number' && student.batchYear >= 1988) return student.batchYear;
@@ -28,13 +14,19 @@ document.addEventListener('DOMContentLoaded', async function () {
     if (!query) return students.slice();
     var text = String(query || '').trim().toLowerCase();
     if (!text) return students.slice();
-    var yearMatch = /^\d{4}$/.test(text) ? Number(text) : 0;
+    var yearMatch = parseSchoolYear(text);
     return students.filter(function (student) {
       var name = [student.firstName, student.lastName].filter(Boolean).join(' ').toLowerCase();
       var batchYear = getStudentYear(student);
       if (yearMatch >= 1988) return batchYear === yearMatch;
       return name.includes(text);
     });
+  }
+
+  function parseSchoolYear(value) {
+    var text = String(value || '').toLowerCase();
+    var match = text.match(/(\d{4})\s*-\s*\d{4}/) || text.match(/(\d{4})/);
+    return match ? Number(match[1]) : 0;
   }
 
   function filterDocsByStudents(docs, students) {
@@ -131,9 +123,9 @@ document.addEventListener('DOMContentLoaded', async function () {
   async function load() {
     window.ArchiviaUI.clearPageError();
     try {
-      allStudents = (await window.ArchiviaApi.withRetry(function () {
+      allStudents = await window.ArchiviaApi.withRetry(function () {
         return window.ArchiviaApi.getStudents();
-      }, 1)).filter(function (s) { return s.status === 'ACTIVE'; });
+      }, 1);
 
       allDocs = await window.ArchiviaApi.withRetry(function () {
         return window.ArchiviaApi.getDocuments();

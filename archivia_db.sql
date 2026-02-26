@@ -86,8 +86,6 @@ CREATE TABLE `students` (
   `batch_year` int(11) NOT NULL,
   `grade_level` varchar(50) DEFAULT NULL,
   `section` varchar(50) DEFAULT NULL,
-  `disability_type` varchar(100) DEFAULT NULL,
-  `status` enum('ACTIVE','ARCHIVED') NOT NULL DEFAULT 'ACTIVE',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   `deleted_at` datetime DEFAULT NULL
@@ -181,9 +179,8 @@ ALTER TABLE `students`
   ADD UNIQUE KEY `uq_students_student_id` (`student_id`),
   ADD KEY `idx_students_batch_year` (`batch_year`),
   ADD KEY `idx_students_last_name` (`last_name`),
-  ADD KEY `idx_students_status` (`status`),
   ADD KEY `idx_students_deleted_at` (`deleted_at`),
-  ADD KEY `idx_students_search` (`last_name`,`first_name`,`batch_year`,`status`);
+  ADD KEY `idx_students_search` (`last_name`,`first_name`,`batch_year`);
 ALTER TABLE `students` ADD FULLTEXT KEY `ftx_students_name` (`first_name`,`last_name`);
 
 --

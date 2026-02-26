@@ -41,13 +41,14 @@
           <div class="toolbar">
             <button class="btn btn-secondary" id="editProfileBtn">Edit Profile</button>
             <button class="btn btn-primary" id="uploadProfileDocBtn">Upload Document</button>
+            <input id="profileDocInput" class="hidden" type="file" />
           </div>
         </section>
         <section class="profile">
           <article class="card" id="profileCard"></article>
           <article class="card">
             <h2>Key Details</h2>
-            <div class="detail-grid table-top-gap" id="profileDetails"></div>
+            <div class="grid-cards metrics-2x2 table-top-gap" id="profileDetails"></div>
           </article>
         </section>
         <section class="grid-cards" id="profileSummary"></section>
@@ -65,13 +66,27 @@
     </div>
   </div>
 
+  <div class="modal" id="profileDocViewerModal" role="dialog" aria-modal="true" aria-labelledby="profileDocViewerTitle">
+    <div class="modal-card">
+      <div class="modal-head"><h3 id="profileDocViewerTitle">Document Viewer</h3></div>
+      <div class="modal-body">
+        <p><strong>Document:</strong> <span id="profileViewerDocName"></span></p>
+        <p class="muted">Preview is secured and view-only in this demo frontend.</p>
+        <div class="empty-state table-top-gap">Document preview area</div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-secondary" data-modal-close="#profileDocViewerModal">Close</button>
+      </div>
+    </div>
+  </div>
+
   <div class="modal" id="editProfileModal" role="dialog" aria-modal="true" aria-labelledby="editProfileTitle">
       <div class="modal-card">
         <div class="modal-head"><h3 id="editProfileTitle">Edit Student Profile</h3></div>
         <div class="modal-body form-grid">
         <div class="form-field"><label class="label" for="profileFirstName">First Name</label><input class="input" id="profileFirstName" /></div>
         <div class="form-field"><label class="label" for="profileLastName">Last Name</label><input class="input" id="profileLastName" /></div>
-        <div class="form-field"><label class="label" for="profileBatchYear">Batch Year</label><input class="input" id="profileBatchYear" type="number" min="2000" max="2100" /></div>
+        <div class="form-field"><label class="label" for="profileBatchYear">School Year</label><input class="input" id="profileBatchYear" placeholder="e.g., SY 1988-1989" /></div>
         <div class="form-field"><label class="label" for="profileGradeLevel">Grade</label><select id="profileGradeLevel" class="select"><option>Grade 5</option><option>Grade 6</option><option>Grade 7</option></select></div>
         </div>
       <div class="modal-foot">

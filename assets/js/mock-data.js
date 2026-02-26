@@ -5,11 +5,10 @@ window.ArchiviaData = {
       studentId: 'SPED-2026-001',
       firstName: 'Maria',
       lastName: 'Santos',
+      sex: 'Female',
       batchYear: 2026,
       gradeLevel: 'Grade 7',
       section: 'Hope',
-      disabilityType: 'Learning Disability',
-      status: 'ACTIVE',
       createdAt: '2026-02-11T08:20:00Z'
     },
     {
@@ -17,11 +16,10 @@ window.ArchiviaData = {
       studentId: 'SPED-2026-002',
       firstName: 'John',
       lastName: 'Dela Cruz',
+      sex: 'Male',
       batchYear: 2026,
       gradeLevel: 'Grade 5',
       section: 'Unity',
-      disabilityType: 'Autism Spectrum Disorder',
-      status: 'ACTIVE',
       createdAt: '2026-02-10T09:10:00Z'
     },
     {
@@ -29,11 +27,10 @@ window.ArchiviaData = {
       studentId: 'SPED-2025-003',
       firstName: 'Angela',
       lastName: 'Reyes',
+      sex: 'Female',
       batchYear: 2025,
       gradeLevel: 'Grade 6',
       section: 'Compassion',
-      disabilityType: 'Hearing Impairment',
-      status: 'ARCHIVED',
       createdAt: '2026-01-25T13:45:00Z'
     }
   ],
@@ -70,10 +67,10 @@ window.ArchiviaData = {
     }
   ],
   users: [
-    { id: 1, name: 'ARCHIVIA Admin', email: 'admin@archivia.edu', role: 'ADMIN', createdAt: '2026-01-01T00:00:00Z' },
-    { id: 2, name: 'Sofia Ramos', email: 's.ramos@archivia.edu', role: 'TEACHER', createdAt: '2026-01-05T00:00:00Z' },
-    { id: 3, name: 'Miguel Cruz', email: 'm.cruz@archivia.edu', role: 'TEACHER', createdAt: '2026-01-07T00:00:00Z' },
-    { id: 4, name: 'Lea Navarro', email: 'l.navarro@archivia.edu', role: 'TEACHER', createdAt: '2026-01-08T00:00:00Z' }
+    { id: 1, name: 'ARCHIVIA Admin', email: 'admin@archivia.edu', role: 'ADMIN', department: 'Administration', createdAt: '2026-01-01T00:00:00Z' },
+    { id: 2, name: 'Sofia Ramos', email: 's.ramos@archivia.edu', role: 'TEACHER', department: 'SPED', createdAt: '2026-01-05T00:00:00Z' },
+    { id: 3, name: 'Miguel Cruz', email: 'm.cruz@archivia.edu', role: 'TEACHER', department: 'Guidance', createdAt: '2026-01-07T00:00:00Z' },
+    { id: 4, name: 'Lea Navarro', email: 'l.navarro@archivia.edu', role: 'TEACHER', department: 'SPED', createdAt: '2026-01-08T00:00:00Z' }
   ],
   logs: [
     { time: '2026-02-13 08:44', actor: 'Admin', userName: 'Admin', action: 'Updated student profile', target: 'SPED-2026-001', entityType: 'STUDENT' },

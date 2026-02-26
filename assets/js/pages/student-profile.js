@@ -12,10 +12,6 @@ document.addEventListener('DOMContentLoaded', async function () {
     profileCard.appendChild(window.ArchiviaUI.createElement('h2', 'table-top-gap', fullName));
     profileCard.appendChild(window.ArchiviaUI.createElement('p', 'muted', student.studentId));
 
-    var statusWrap = window.ArchiviaUI.createElement('p', 'table-top-gap');
-    statusWrap.appendChild(window.ArchiviaUI.createElement('span', student.status === 'ACTIVE' ? 'status status-active' : 'status status-archived', student.status));
-    profileCard.appendChild(statusWrap);
-
     var actions = window.ArchiviaUI.createElement('div', 'profile-photo-actions');
     var input = window.ArchiviaUI.createElement('input', 'hidden');
     input.id = 'studentPhotoInput';
@@ -30,9 +26,8 @@ document.addEventListener('DOMContentLoaded', async function () {
   function renderDetails(student) {
     var details = [
       ['Grade', student.gradeLevel],
-      ['Batch Year', student.batchYear],
+      ['School Year', formatSchoolYear(student.batchYear)],
       ['Section', student.section],
-      ['Disability', student.disabilityType],
       ['Created At', new Date(student.createdAt).toLocaleString()]
     ];
     var detailRoot = document.getElementById('profileDetails');
@@ -84,8 +79,7 @@ document.addEventListener('DOMContentLoaded', async function () {
       var docs = docsAll.filter(function (d) { return d.studentId === student.id; });
       window.ArchiviaUI.renderMetricCards('#profileSummary', [
         { title: 'Documents Linked', value: docs.length },
-        { title: 'Total File Size', value: docs.reduce(function (sum, item) { return sum + (item.fileSize || 0); }, 0) + ' B' },
-        { title: 'Profile Status', value: student.status }
+        { title: 'Total File Size', value: docs.reduce(function (sum, item) { return sum + (item.fileSize || 0); }, 0) + ' B' }
       ]);
 
       window.ArchiviaUI.renderRows('#profileDocsBody', docs, [
@@ -95,22 +89,33 @@ document.addEventListener('DOMContentLoaded', async function () {
         { key: 'uploadedBy' },
         {
           key: 'id',
-          render: function () {
-            return '-';
+          render: function (row) {
+            return row.filePath ? 'Stored' : 'Missing';
           }
         },
         {
           key: 'id',
-          render: function () {
-            return window.ArchiviaUI.createActionButton('View', 'btn btn-secondary');
+          render: function (row) {
+            return window.ArchiviaUI.createActionButton('View', 'btn btn-secondary', { 'data-view-doc': row.id });
           }
         }
       ], 'No documents available for this student.');
 
+      window.ArchiviaUI.qsa('[data-view-doc]').forEach(function (button) {
+        button.addEventListener('click', function () {
+          var docId = Number(button.getAttribute('data-view-doc'));
+          var doc = docs.find(function (item) { return item.id === docId; });
+          var label = doc ? doc.originalName : String(docId);
+          var target = document.getElementById('profileViewerDocName');
+          if (target) target.textContent = label;
+          window.ArchiviaUI.openModal('#profileDocViewerModal');
+        });
+      });
+
       document.getElementById('editProfileBtn').onclick = function () {
         document.getElementById('profileFirstName').value = student.firstName;
         document.getElementById('profileLastName').value = student.lastName;
-        document.getElementById('profileBatchYear').value = String(student.batchYear);
+        document.getElementById('profileBatchYear').value = formatSchoolYear(student.batchYear);
         document.getElementById('profileGradeLevel').value = student.gradeLevel;
         window.ArchiviaUI.openModal('#editProfileModal');
       };
@@ -121,8 +126,19 @@ document.addEventListener('DOMContentLoaded', async function () {
       };
 
       document.getElementById('uploadProfileDocBtn').onclick = function () {
-        window.location.href = 'documents.html';
+        var input = document.getElementById('profileDocInput');
+        if (input) input.click();
       };
+
+      var docInput = document.getElementById('profileDocInput');
+      if (docInput) {
+        docInput.onchange = function (event) {
+          var file = event.target.files && event.target.files[0];
+          if (!file) return;
+          window.ArchiviaUI.showToast('Document uploaded to this student profile.');
+          docInput.value = '';
+        };
+      }
 
       document.getElementById('uploadStudentPhotoBtn').onclick = function () {
         document.getElementById('studentPhotoInput').click();
@@ -156,3 +172,13 @@ document.addEventListener('DOMContentLoaded', async function () {
 
   await load();
 });
+  function formatSchoolYear(value) {
+    var year = 0;
+    if (typeof value === 'number') year = value;
+    if (typeof value === 'string') {
+      var match = value.match(/(\d{4})/);
+      year = match ? Number(match[1]) : 0;
+    }
+    if (year < 1988) return '-';
+    return 'SY ' + year + '-' + (year + 1);
+  }

@@ -103,17 +103,15 @@
   }
 
   function mapStudent(item) {
-    var status = String(item.status || '').toUpperCase();
     return {
       id: Number(item.id),
       studentId: item.studentId || item.lrn || '',
       firstName: item.firstName || '',
       lastName: item.lastName || '',
+      sex: item.sex || item.gender || '',
       batchYear: Number(item.batchYear) || Number(formatDate(item.createdAt).slice(0, 4)) || 0,
       gradeLevel: item.gradeLevel || 'N/A',
       section: item.section || 'N/A',
-      disabilityType: item.disabilityType || 'N/A',
-      status: status === 'ARCHIVED' || status === 'INACTIVE' ? 'ARCHIVED' : 'ACTIVE',
       createdAt: item.createdAt || null
     };
   }
@@ -138,6 +136,7 @@
       name: item.name || 'Unknown',
       email: item.email || '',
       role: role === 'ADMIN' ? 'ADMIN' : 'TEACHER',
+      department: item.department || (role === 'ADMIN' ? 'Administration' : 'SPED'),
       createdAt: item.createdAt || null
     };
   }

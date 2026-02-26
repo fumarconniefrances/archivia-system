@@ -1,19 +1,20 @@
 document.addEventListener('DOMContentLoaded', async function () {
-  var importBtn = document.getElementById('importBtn');
-  var exportBtn = document.getElementById('exportBtn');
+  var addStudentBtn = document.getElementById('addStudentBtn');
+  var saveStudentBtn = document.getElementById('saveStudentBtn');
   var searchInput = document.getElementById('globalSearch');
   var allStudents = [];
   var allDocs = [];
 
-  if (importBtn) {
-    importBtn.addEventListener('click', function () {
-      window.ArchiviaUI.showToast('Import workflow is not available in this build.');
+  if (addStudentBtn) {
+    addStudentBtn.addEventListener('click', function () {
+      window.ArchiviaUI.openModal('#addStudentModal');
     });
   }
 
-  if (exportBtn) {
-    exportBtn.addEventListener('click', function () {
-      window.ArchiviaUI.showToast('Export started. Your file will be ready shortly.');
+  if (saveStudentBtn) {
+    saveStudentBtn.addEventListener('click', function () {
+      window.ArchiviaUI.closeModal('#addStudentModal');
+      window.ArchiviaUI.showToast('Student record saved.');
     });
   }
 
@@ -28,13 +29,19 @@ document.addEventListener('DOMContentLoaded', async function () {
     if (!query) return students.slice();
     var text = String(query || '').trim().toLowerCase();
     if (!text) return students.slice();
-    var yearMatch = /^\d{4}$/.test(text) ? Number(text) : 0;
+    var yearMatch = parseSchoolYear(text);
     return students.filter(function (student) {
       var name = [student.firstName, student.lastName].filter(Boolean).join(' ').toLowerCase();
       var batchYear = getStudentYear(student);
       if (yearMatch >= 1988) return batchYear === yearMatch;
       return name.includes(text);
     });
+  }
+
+  function parseSchoolYear(value) {
+    var text = String(value || '').toLowerCase();
+    var match = text.match(/(\d{4})\s*-\s*\d{4}/) || text.match(/(\d{4})/);
+    return match ? Number(match[1]) : 0;
   }
 
   function filterDocsByStudents(docs, students) {
@@ -45,37 +52,16 @@ document.addEventListener('DOMContentLoaded', async function () {
     });
   }
 
-  function renderAdminState(students, docs) {
-    var root = document.getElementById('adminState');
-    if (!root) return;
-    var today = new Date().toLocaleString();
-    root.innerHTML = '';
-    var title = window.ArchiviaUI.createElement('h2', '', 'System State');
-    root.appendChild(title);
-    var wrap = window.ArchiviaUI.createElement('div', 'state-grid table-top-gap');
-    [
-      'Role Permissions: Full Administrative Access',
-      'Records Loaded: ' + students.length + ' students / ' + docs.length + ' documents',
-      'Last Refreshed: ' + today
-    ].forEach(function (text) {
-      wrap.appendChild(window.ArchiviaUI.createElement('div', 'state-chip', text));
-    });
-    root.appendChild(wrap);
-  }
-
   function renderDashboard(students, docs) {
     var studentsSorted = students.slice().sort(function (a, b) {
       return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     });
 
-    renderAdminState(students, docs);
-
-    window.ArchiviaUI.renderMetricCards('#adminMetrics', [
-      { title: 'Total SPED Students', value: students.length, hint: 'Current enrolled + archived profiles' },
-      { title: 'Active Profiles', value: students.filter(function (s) { return s.status === 'ACTIVE'; }).length, hint: 'Profiles available for daily operations' },
-      { title: 'Archived Profiles', value: students.filter(function (s) { return s.status === 'ARCHIVED'; }).length, hint: 'Records retained for compliance' },
-      { title: 'Documents Stored', value: docs.length, hint: 'Files linked to student profiles' }
-    ]);
+      window.ArchiviaUI.renderMetricCards('#adminMetrics', [
+        { title: 'Total SPED Students', value: students.length, hint: 'Current enrolled profiles' },
+        { title: 'School Years', value: Array.from(new Set(students.map(getStudentYear).filter(function (y) { return y >= 1988; }))).length, hint: 'Available batch years' },
+        { title: 'Documents Stored', value: docs.length, hint: 'Files linked to student profiles' }
+      ]);
 
     window.ArchiviaUI.renderRows('#adminRecentBody', studentsSorted, [
       { key: 'studentId' },
@@ -88,7 +74,6 @@ document.addEventListener('DOMContentLoaded', async function () {
         }
       },
       { key: 'gradeLevel' },
-      { key: 'status', type: 'status' },
       {
         key: 'createdAt',
         render: function (row) {

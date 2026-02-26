@@ -29,7 +29,7 @@
     </aside>
     <div class="main">
       <header class="topbar">
-        <div class="search-wrap"><input id="globalSearch" class="input" placeholder="Search student name or batch year (1988+)" /></div>
+        <div class="search-wrap"><input id="globalSearch" class="input" placeholder="Search student name or school year (SY 1988-1989)" /></div>
         <span class="muted">Student Records</span>
       </header>
       <main class="content">
@@ -41,17 +41,76 @@
           <button class="btn btn-primary" id="addStudentBtn">Add Student</button>
         </section>
         <section class="grid-cards" id="studentSummary"></section>
-        <section class="card">
-          <div id="studentsLoading" class="loading-state table-top-gap">Loading student records...</div>
+        <section class="card" id="schoolYearSection">
+          <h2>School Years</h2>
+          <div id="studentsLoading" class="loading-state table-top-gap">Loading school years...</div>
           <div class="table-wrap table-top-gap">
             <table class="table">
-              <thead><tr><th>ID</th><th>Name</th><th>Grade</th><th>Section</th><th>Disability</th><th>Status</th><th>Action</th></tr></thead>
+              <thead><tr><th>School Year</th><th>Students</th><th>Action</th></tr></thead>
+              <tbody id="schoolYearTableBody"></tbody>
+            </table>
+          </div>
+        </section>
+        <section class="card hidden" id="yearStudentsSection">
+          <div class="card-title-row">
+            <h2 id="yearStudentsTitle">Students</h2>
+            <div class="toolbar">
+              <select id="sexFilter" class="select" aria-label="Filter by gender">
+                <option value="">All Gender</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+              </select>
+              <button class="btn btn-secondary" id="backToYearsBtn" type="button">Back to School Years</button>
+            </div>
+          </div>
+          <div class="table-wrap table-top-gap">
+            <table class="table">
+              <thead><tr><th>ID</th><th>Name</th><th>Sex</th><th>Graduate Year</th><th>Grade</th><th>Section</th><th>Action</th></tr></thead>
               <tbody id="studentTableBody"></tbody>
             </table>
           </div>
         </section>
         <footer class="muted footer-credit">Developed by FumarDev - ARCHIVIA System</footer>
       </main>
+    </div>
+  </div>
+  <div class="modal" id="addStudentModal" role="dialog" aria-modal="true" aria-labelledby="addStudentTitle">
+    <div class="modal-card">
+      <div class="modal-head"><h3 id="addStudentTitle">Add Student</h3></div>
+      <div class="modal-body form-grid">
+        <div class="form-field">
+          <label class="label" for="studentLrn">LRN / Student ID</label>
+          <input class="input" id="studentLrn" placeholder="e.g., SPED-2026-001" required />
+        </div>
+        <div class="form-field">
+          <label class="label" for="studentName">Full Name</label>
+          <input class="input" id="studentName" placeholder="e.g., Maria Santos" required />
+        </div>
+        <div class="form-field">
+          <label class="label" for="studentGrade">Grade</label>
+          <input class="input" id="studentGrade" placeholder="e.g., Grade 7" required />
+        </div>
+        <div class="form-field">
+          <label class="label" for="studentSection">Section</label>
+          <input class="input" id="studentSection" placeholder="e.g., Hope" required />
+        </div>
+        <div class="form-field">
+          <label class="label" for="studentSex">Sex</label>
+          <select class="select" id="studentSex" required>
+            <option value="">Select</option>
+            <option value="Female">Female</option>
+            <option value="Male">Male</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label class="label" for="studentSchoolYear">School Year</label>
+          <input class="input" id="studentSchoolYear" placeholder="e.g., SY 1988-1989" required />
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-secondary" data-modal-close="#addStudentModal">Cancel</button>
+        <button class="btn btn-primary" id="saveStudentBtn">Save Student</button>
+      </div>
     </div>
   </div>
   <div id="toastStack" class="toast-stack" aria-live="polite"></div>

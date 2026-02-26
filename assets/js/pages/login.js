@@ -23,19 +23,12 @@ document.addEventListener('DOMContentLoaded', function () {
   var form = document.getElementById('loginForm');
   form.addEventListener('submit', async function (event) {
     event.preventDefault();
-    var selectedRole = document.getElementById('role').value === 'admin' ? 'admin' : 'teacher';
     var email = document.getElementById('username').value.trim();
     var password = document.getElementById('password').value;
 
     try {
       var profile = await window.ArchiviaApi.login(email, password);
       var userRole = String(profile.role || '').toLowerCase();
-
-      if (selectedRole !== userRole) {
-        await window.ArchiviaApi.logout();
-        window.ArchiviaUI.showToast('Selected role does not match account role.');
-        return;
-      }
 
       sessionStorage.setItem('archivia_role', userRole);
       localStorage.removeItem('archivia_role');

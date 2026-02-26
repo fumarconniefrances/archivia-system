@@ -2,6 +2,11 @@ document.addEventListener('DOMContentLoaded', async function () {
   var searchInput = document.getElementById('globalSearch');
   var all = [];
   var selectedTeacherId = 0;
+  var newTeacherBtn = document.getElementById('newTeacherBtn');
+  var saveTeacherBtn = document.getElementById('saveTeacherBtn');
+  var teacherFullNameInput = document.getElementById('teacherFullName');
+  var teacherEmailInput = document.getElementById('teacherEmail');
+  var teacherDepartmentInput = document.getElementById('teacherDepartment');
 
   function photoCell(name, teacherId, fallback) {
     var photo = window.ArchiviaUI.getTeacherPhoto(teacherId, fallback);
@@ -54,13 +59,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         }
       },
       { key: 'email' },
-      { key: 'role' },
-      {
-        key: 'role',
-        render: function () {
-          return window.ArchiviaUI.createElement('span', 'status status-active', 'Active');
-        }
-      },
+      { key: 'department' },
       {
         key: 'id',
         render: function (row) {
@@ -92,9 +91,42 @@ document.addEventListener('DOMContentLoaded', async function () {
 
   if (searchInput) searchInput.addEventListener('input', draw);
 
-  document.getElementById('newTeacherBtn').addEventListener('click', function () {
-    window.ArchiviaUI.showToast('Teacher onboarding form can be connected here.');
-  });
+  if (newTeacherBtn) {
+    newTeacherBtn.addEventListener('click', function () {
+      window.ArchiviaUI.openModal('#addTeacherModal');
+    });
+  }
+
+  if (saveTeacherBtn) {
+    saveTeacherBtn.addEventListener('click', function () {
+      var fullName = teacherFullNameInput ? teacherFullNameInput.value.trim() : '';
+      var email = teacherEmailInput ? teacherEmailInput.value.trim() : '';
+      var department = teacherDepartmentInput ? teacherDepartmentInput.value.trim() : '';
+      if (!fullName || !email || !department) {
+        window.ArchiviaUI.showToast('Please complete all required fields.');
+        return;
+      }
+
+      var nextId = all.reduce(function (maxId, teacher) {
+        return Math.max(maxId, Number(teacher.id) || 0);
+      }, 0) + 1;
+
+      all.push({
+        id: nextId,
+        name: fullName,
+        email: email,
+        department: department
+      });
+
+      if (teacherFullNameInput) teacherFullNameInput.value = '';
+      if (teacherEmailInput) teacherEmailInput.value = '';
+      if (teacherDepartmentInput) teacherDepartmentInput.value = '';
+
+      window.ArchiviaUI.closeModal('#addTeacherModal');
+      draw();
+      window.ArchiviaUI.showToast('Teacher record saved.');
+    });
+  }
 
   document.getElementById('uploadTeacherPhotoBtn').addEventListener('click', function () {
     document.getElementById('teacherPhotoInput').click();

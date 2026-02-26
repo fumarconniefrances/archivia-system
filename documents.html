@@ -29,7 +29,7 @@
     </aside>
     <div class="main">
       <header class="topbar">
-        <div class="search-wrap"><input id="globalSearch" class="input" placeholder="Search student name or batch year (1988+)" /></div>
+        <div class="search-wrap"><input id="globalSearch" class="input" placeholder="Search student name or school year (SY 1988-1989)" /></div>
         <span class="muted">Secure Archive</span>
       </header>
       <main class="content">
@@ -40,16 +40,13 @@
           </div>
         </section>
         <section class="grid-cards" id="docSummary"></section>
-        <section class="card upload-panel">
-          <h2>Upload New Record</h2>
-          <p class="muted">Drag and drop files or browse local storage.</p>
-          <div class="table-top-gap"><button class="btn btn-primary" id="uploadDocBtn">Upload Document</button></div>
-        </section>
         <section class="card">
+          <h2>Document Archive</h2>
+          <p class="muted">Summary per student profile (total uploads + latest upload date).</p>
           <div class="table-wrap table-top-gap">
             <table class="table">
-              <thead><tr><th>Document ID</th><th>Student ID</th><th>Title</th><th>Type</th><th>Uploaded At</th><th>Status</th><th>Action</th></tr></thead>
-              <tbody id="docTableBody"></tbody>
+              <thead><tr><th>Student ID</th><th>Name</th><th>Total Documents</th><th>Action</th></tr></thead>
+              <tbody id="docArchiveBody"></tbody>
             </table>
           </div>
         </section>
