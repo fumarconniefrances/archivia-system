@@ -7,6 +7,9 @@ $dbPass = getenv('ARCHIVIA_DB_PASS') ?: '';
 $backupDir = getenv('ARCHIVIA_BACKUP_DIR') ?: 'C:\\ARCHIVIA_BACKUPS';
 $uploadDir = realpath(__DIR__ . '/../storage/uploads');
 
+ini_set('display_errors', '0');
+ini_set('log_errors', '1');
+
 $dsn = "mysql:host={$dbHost};dbname={$dbName};charset=utf8mb4";
 $options = [
   PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,

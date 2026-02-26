@@ -1,10 +1,20 @@
 <?php
 require_once __DIR__ . '/utils.php';
 
-function require_login() {
+function start_secure_session() {
   if (session_status() === PHP_SESSION_NONE) {
+    ini_set('session.use_strict_mode', '1');
+    ini_set('session.cookie_httponly', '1');
+    ini_set('session.use_only_cookies', '1');
+    if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') {
+      ini_set('session.cookie_secure', '1');
+    }
     session_start();
   }
+}
+
+function require_login() {
+  start_secure_session();
   if (empty($_SESSION['user_id'])) {
     error_response('Unauthorized', 401);
   }

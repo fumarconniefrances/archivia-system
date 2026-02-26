@@ -1,10 +1,9 @@
 <?php
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/utils.php';
+require_once __DIR__ . '/middleware.php';
 
-if (session_status() === PHP_SESSION_NONE) {
-  session_start();
-}
+start_secure_session();
 
 $action = $_GET['action'] ?? '';
 
@@ -27,8 +26,10 @@ if ($action === 'login' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     error_response('Invalid role.', 403);
   }
 
+  session_regenerate_id(true);
   $_SESSION['user_id'] = (int)$user['id'];
   $_SESSION['role'] = $user['role'];
+  $_SESSION['name'] = $user['name'];
 
   json_response([
     'success' => true,
@@ -43,6 +44,14 @@ if ($action === 'login' && $_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 if ($action === 'logout' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+  if (empty($_SESSION['user_id'])) {
+    error_response('Unauthorized', 401);
+  }
+  $_SESSION = [];
+  if (ini_get('session.use_cookies')) {
+    $params = session_get_cookie_params();
+    setcookie(session_name(), '', time() - 42000, $params['path'], $params['domain'], $params['secure'], $params['httponly']);
+  }
   session_destroy();
   json_response(['success' => true, 'data' => true]);
 }
