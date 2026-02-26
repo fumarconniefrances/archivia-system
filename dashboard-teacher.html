@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: https:; style-src 'self'; script-src 'self'; connect-src 'self' http://127.0.0.1:4000; base-uri 'self'; form-action 'self'; frame-ancestors 'none'" />
+  <meta name="referrer" content="no-referrer" />
+  <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=()" />
+  <title>Teacher Dashboard | ARCHIVIA</title>
+  <link rel="stylesheet" href="assets/css/main.css" />
+  <link rel="icon" type="image/jpeg" href="assets/images/SPEDlogo.jpg" />
+</head>
+<body data-required-role="admin,teacher">
+  <div class="app-layout">
+    <aside class="sidebar">
+      <div class="brand">ARCHIVIA</div>
+      <nav class="nav">
+        <a class="nav-link" href="dashboard-admin.html" data-role="admin">Admin Dashboard</a>
+        <a class="nav-link active" href="dashboard-teacher.html" data-role="teacher">Teacher Dashboard</a>
+        <a class="nav-link" href="students.html">Students</a>
+        <a class="nav-link" href="documents.html">Document Archive</a>
+        <a class="nav-link" href="activity-logs.html">Activity Logs</a>
+      </nav>
+      <div class="sidebar-actions">
+        <button class="btn btn-secondary btn-sidebar-logout" type="button" data-logout>Log Out</button>
+      </div>
+    </aside>
+    <div class="main">
+      <header class="topbar">
+        <div class="search-wrap">
+          <input id="globalSearch" class="input" placeholder="Search student name or batch year (1988+)" />
+        </div>
+        <span class="muted">Teacher View-Only Session</span>
+      </header>
+      <main class="content">
+        <section class="page-head">
+          <div>
+            <h1 class="page-title">Teacher Dashboard</h1>
+            <p class="page-meta">Assigned student profiles and recent documents</p>
+          </div>
+          <div class="toolbar">
+            <button class="btn btn-secondary" type="button" id="importBtn">Import</button>
+            <button class="btn btn-primary" type="button" id="exportBtn">Export</button>
+          </div>
+        </section>
+        <section class="card dashboard-state" id="teacherState"></section>
+        <section class="grid-cards metrics-2x2" id="teacherMetrics"></section>
+        <section class="dashboard-layout">
+          <div class="dashboard-column">
+            <article class="card">
+              <div class="card-title-row">
+                <h2>Assigned Students</h2>
+                <a class="btn btn-secondary" href="students.html">Open Student List</a>
+              </div>
+              <p class="muted table-top-gap">View-only access for teacher accounts.</p>
+              <div class="table-wrap table-top-gap">
+                <table class="table">
+                  <thead><tr><th>ID</th><th>Name</th><th>Grade</th><th>Section</th><th>Last Update</th><th>Profile</th></tr></thead>
+                  <tbody id="teacherStudentBody"></tbody>
+                </table>
+              </div>
+            </article>
+          </div>
+          <div class="dashboard-column" id="teacherHighlights">
+            <article class="card">
+              <h2>Today Priorities</h2>
+              <p class="muted table-top-gap">Review pending documents and verify student profile updates before end of class hours.</p>
+              <div class="toolbar table-top-gap">
+                <a class="btn btn-secondary" href="documents.html">Review Documents</a>
+                <a class="btn btn-primary" href="activity-logs.html">Open Activity Logs</a>
+              </div>
+            </article>
+            <article class="card">
+              <h2>Recent Notifications</h2>
+              <div id="teacherAlerts" class="compact-list table-top-gap"></div>
+            </article>
+          </div>
+        </section>
+        <footer class="muted footer-credit">Developed by FumarDev - ARCHIVIA System</footer>
+      </main>
+    </div>
+  </div>
+  <div id="toastStack" class="toast-stack" aria-live="polite"></div>
+  <script src="assets/js/mock-data.js"></script>
+  <script src="assets/js/config.js"></script>
+  <script src="assets/js/services/api.js"></script>
+  <script src="assets/js/app.js"></script>
+  <script src="assets/js/pages/dashboard-teacher.js"></script>
+</body>
+</html>
+

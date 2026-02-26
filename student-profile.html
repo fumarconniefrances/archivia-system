@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: https:; style-src 'self'; script-src 'self'; connect-src 'self' http://127.0.0.1:4000; base-uri 'self'; form-action 'self'; frame-ancestors 'none'" />
+  <meta name="referrer" content="no-referrer" />
+  <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=()" />
+  <title>Student Profile | ARCHIVIA</title>
+  <link rel="stylesheet" href="assets/css/main.css" />
+  <link rel="icon" type="image/jpeg" href="assets/images/SPEDlogo.jpg" />
+</head>
+<body data-required-role="admin,teacher">
+  <div class="app-layout">
+    <aside class="sidebar">
+      <div class="brand">ARCHIVIA</div>
+      <nav class="nav">
+        <a class="nav-link" href="dashboard-admin.html" data-role="admin">Admin Dashboard</a>
+        <a class="nav-link" href="dashboard-teacher.html" data-role="teacher">Teacher Dashboard</a>
+        <a class="nav-link active" href="students.html">Students</a>
+        <a class="nav-link" href="documents.html">Document Archive</a>
+        <a class="nav-link" href="teacher-management.html" data-role="admin">Teacher Management</a>
+        <a class="nav-link" href="activity-logs.html">Activity Logs</a>
+        <a class="nav-link" href="settings.html" data-role="admin">Settings</a>
+      </nav>
+      <div class="sidebar-actions">
+        <button class="btn btn-secondary btn-sidebar-logout" type="button" data-logout>Log Out</button>
+      </div>
+    </aside>
+    <div class="main">
+      <header class="topbar">
+        <div class="search-wrap"><input id="globalSearch" class="input" placeholder="Search inside profile" /></div>
+        <span class="muted">Student Profile</span>
+      </header>
+      <main class="content">
+        <section class="page-head">
+          <div>
+            <h1 class="page-title">Student Profile</h1>
+            <p class="page-meta">Comprehensive private student record</p>
+          </div>
+          <div class="toolbar">
+            <button class="btn btn-secondary" id="editProfileBtn">Edit Profile</button>
+            <button class="btn btn-primary" id="uploadProfileDocBtn">Upload Document</button>
+          </div>
+        </section>
+        <section class="profile">
+          <article class="card" id="profileCard"></article>
+          <article class="card">
+            <h2>Key Details</h2>
+            <div class="detail-grid table-top-gap" id="profileDetails"></div>
+          </article>
+        </section>
+        <section class="grid-cards" id="profileSummary"></section>
+        <section class="card">
+          <h2>Document History</h2>
+          <div class="table-wrap table-top-gap">
+            <table class="table">
+              <thead><tr><th>Document ID</th><th>Title</th><th>Type</th><th>Uploaded By</th><th>Status</th><th>Action</th></tr></thead>
+              <tbody id="profileDocsBody"></tbody>
+            </table>
+          </div>
+        </section>
+        <footer class="muted footer-credit">Developed by FumarDev - ARCHIVIA System</footer>
+      </main>
+    </div>
+  </div>
+
+  <div class="modal" id="editProfileModal" role="dialog" aria-modal="true" aria-labelledby="editProfileTitle">
+      <div class="modal-card">
+        <div class="modal-head"><h3 id="editProfileTitle">Edit Student Profile</h3></div>
+        <div class="modal-body form-grid">
+        <div class="form-field"><label class="label" for="profileFirstName">First Name</label><input class="input" id="profileFirstName" /></div>
+        <div class="form-field"><label class="label" for="profileLastName">Last Name</label><input class="input" id="profileLastName" /></div>
+        <div class="form-field"><label class="label" for="profileBatchYear">Batch Year</label><input class="input" id="profileBatchYear" type="number" min="2000" max="2100" /></div>
+        <div class="form-field"><label class="label" for="profileGradeLevel">Grade</label><select id="profileGradeLevel" class="select"><option>Grade 5</option><option>Grade 6</option><option>Grade 7</option></select></div>
+        </div>
+      <div class="modal-foot">
+        <button class="btn btn-secondary" data-modal-close="#editProfileModal">Cancel</button>
+        <button class="btn btn-primary" id="saveProfileBtn">Save Changes</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toastStack" class="toast-stack" aria-live="polite"></div>
+  <script src="assets/js/mock-data.js"></script>
+  <script src="assets/js/config.js"></script>
+  <script src="assets/js/services/api.js"></script>
+  <script src="assets/js/app.js"></script>
+  <script src="assets/js/pages/student-profile.js"></script>
+</body>
+</html>
+

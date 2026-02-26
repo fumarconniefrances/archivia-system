@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: https:; style-src 'self'; script-src 'self'; connect-src 'self' http://127.0.0.1:4000; base-uri 'self'; form-action 'self'; frame-ancestors 'none'" />
+  <meta name="referrer" content="no-referrer" />
+  <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=()" />
+  <title>Document Archive | ARCHIVIA</title>
+  <link rel="stylesheet" href="assets/css/main.css" />
+  <link rel="icon" type="image/jpeg" href="assets/images/SPEDlogo.jpg" />
+</head>
+<body data-required-role="admin,teacher">
+  <div class="app-layout">
+    <aside class="sidebar">
+      <div class="brand">ARCHIVIA</div>
+      <nav class="nav">
+        <a class="nav-link" href="dashboard-admin.html" data-role="admin">Admin Dashboard</a>
+        <a class="nav-link" href="dashboard-teacher.html" data-role="teacher">Teacher Dashboard</a>
+        <a class="nav-link" href="students.html">Students</a>
+        <a class="nav-link active" href="documents.html">Document Archive</a>
+        <a class="nav-link" href="teacher-management.html" data-role="admin">Teacher Management</a>
+        <a class="nav-link" href="activity-logs.html">Activity Logs</a>
+        <a class="nav-link" href="settings.html" data-role="admin">Settings</a>
+      </nav>
+      <div class="sidebar-actions">
+        <button class="btn btn-secondary btn-sidebar-logout" type="button" data-logout>Log Out</button>
+      </div>
+    </aside>
+    <div class="main">
+      <header class="topbar">
+        <div class="search-wrap"><input id="globalSearch" class="input" placeholder="Search student name or batch year (1988+)" /></div>
+        <span class="muted">Secure Archive</span>
+      </header>
+      <main class="content">
+        <section class="page-head">
+          <div>
+            <h1 class="page-title">Document Archive</h1>
+            <p class="page-meta">Secure storage for private student records</p>
+          </div>
+        </section>
+        <section class="grid-cards" id="docSummary"></section>
+        <section class="card upload-panel">
+          <h2>Upload New Record</h2>
+          <p class="muted">Drag and drop files or browse local storage.</p>
+          <div class="table-top-gap"><button class="btn btn-primary" id="uploadDocBtn">Upload Document</button></div>
+        </section>
+        <section class="card">
+          <div class="table-wrap table-top-gap">
+            <table class="table">
+              <thead><tr><th>Document ID</th><th>Student ID</th><th>Title</th><th>Type</th><th>Uploaded At</th><th>Status</th><th>Action</th></tr></thead>
+              <tbody id="docTableBody"></tbody>
+            </table>
+          </div>
+        </section>
+        <footer class="muted footer-credit">Developed by FumarDev - ARCHIVIA System</footer>
+      </main>
+    </div>
+  </div>
+
+  <div class="modal" id="documentViewerModal" role="dialog" aria-modal="true" aria-labelledby="docViewerTitle">
+    <div class="modal-card">
+      <div class="modal-head"><h3 id="docViewerTitle">Document Viewer</h3></div>
+      <div class="modal-body">
+        <p><strong>Document:</strong> <span id="viewerDocName"></span></p>
+        <p class="muted">Preview is secured and view-only in this demo frontend.</p>
+        <div class="empty-state table-top-gap">Document preview area</div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-secondary" data-modal-close="#documentViewerModal">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toastStack" class="toast-stack" aria-live="polite"></div>
+  <script src="assets/js/mock-data.js"></script>
+  <script src="assets/js/config.js"></script>
+  <script src="assets/js/services/api.js"></script>
+  <script src="assets/js/app.js"></script>
+  <script src="assets/js/pages/documents.js"></script>
+</body>
+</html>
+

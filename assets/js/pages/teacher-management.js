@@ -1,0 +1,129 @@
+document.addEventListener('DOMContentLoaded', async function () {
+  var searchInput = document.getElementById('globalSearch');
+  var all = [];
+  var selectedTeacherId = 0;
+
+  function photoCell(name, teacherId, fallback) {
+    var photo = window.ArchiviaUI.getTeacherPhoto(teacherId, fallback);
+    return window.ArchiviaUI.createPersonCell(name, photo, false);
+  }
+
+  function bindManageButtons() {
+    window.ArchiviaUI.qsa('[data-manage-teacher]').forEach(function (button) {
+      button.onclick = function () {
+        selectedTeacherId = Number(button.getAttribute('data-manage-teacher')) || 0;
+        renderTeacherPhotoPreview();
+        window.ArchiviaUI.openModal('#teacherPhotoModal');
+      };
+    });
+  }
+
+  function renderTeacherPhotoPreview() {
+    var teacher = all.find(function (t) { return t.id === selectedTeacherId; });
+    var root = document.getElementById('teacherPhotoPreview');
+    if (!teacher || !root) return;
+
+    root.innerHTML = '';
+    var wrap = window.ArchiviaUI.createElement('div', 'person-cell');
+    var photo = window.ArchiviaUI.getTeacherPhoto(teacher.id, '');
+    wrap.appendChild(window.ArchiviaUI.createPhotoVisual(photo, teacher.name, true));
+    var content = window.ArchiviaUI.createElement('div');
+    var nameLine = window.ArchiviaUI.createElement('p');
+    nameLine.appendChild(window.ArchiviaUI.createElement('strong', '', teacher.name));
+    content.appendChild(nameLine);
+    content.appendChild(window.ArchiviaUI.createElement('p', 'muted', teacher.id));
+    wrap.appendChild(content);
+    root.appendChild(wrap);
+  }
+
+  function draw() {
+    var keyword = searchInput ? searchInput.value.trim().toLowerCase() : '';
+    var filtered = all.filter(function (row) {
+      var rowName = row.name.toLowerCase();
+      var rowEmail = row.email.toLowerCase();
+      if (!keyword) return true;
+      return rowName.includes(keyword) || rowEmail.includes(keyword);
+    });
+
+    window.ArchiviaUI.renderRows('#teacherTableBody', filtered, [
+      { key: 'id' },
+      {
+        key: 'name',
+        render: function (row) {
+          return photoCell(row.name, row.id, '');
+        }
+      },
+      { key: 'email' },
+      { key: 'role' },
+      {
+        key: 'role',
+        render: function () {
+          return window.ArchiviaUI.createElement('span', 'status status-active', 'Active');
+        }
+      },
+      {
+        key: 'id',
+        render: function (row) {
+          return window.ArchiviaUI.createActionButton('Manage', 'btn btn-secondary', { 'data-manage-teacher': row.id });
+        }
+      }
+    ], 'No teacher accounts match the selected filters.');
+
+    bindManageButtons();
+  }
+
+  async function load() {
+    window.ArchiviaUI.clearPageError();
+    window.ArchiviaUI.showSkeleton('#teacherSummary', 3);
+    try {
+      all = await window.ArchiviaApi.withRetry(function () {
+        return window.ArchiviaApi.getTeachers();
+      }, 1);
+      window.ArchiviaUI.renderMetricCards('#teacherSummary', [
+        { title: 'Total Teachers', value: all.length },
+        { title: 'Active Accounts', value: all.length },
+        { title: 'Inactive Accounts', value: 0 }
+      ]);
+      draw();
+    } catch (error) {
+      window.ArchiviaUI.showPageError(error.message, load);
+    }
+  }
+
+  if (searchInput) searchInput.addEventListener('input', draw);
+
+  document.getElementById('newTeacherBtn').addEventListener('click', function () {
+    window.ArchiviaUI.showToast('Teacher onboarding form can be connected here.');
+  });
+
+  document.getElementById('uploadTeacherPhotoBtn').addEventListener('click', function () {
+    document.getElementById('teacherPhotoInput').click();
+  });
+
+  document.getElementById('teacherPhotoInput').addEventListener('change', function (event) {
+    var file = event.target.files && event.target.files[0];
+    if (!file || !selectedTeacherId) return;
+    if (!file.type.startsWith('image/')) {
+      window.ArchiviaUI.showToast('Please select an image file.');
+      return;
+    }
+    var reader = new FileReader();
+    reader.onload = function (e) {
+      window.ArchiviaUI.setTeacherPhoto(selectedTeacherId, e.target.result);
+      window.ArchiviaUI.showToast('Teacher photo uploaded.');
+      renderTeacherPhotoPreview();
+      draw();
+    };
+    reader.readAsDataURL(file);
+  });
+
+  document.getElementById('removeTeacherPhotoBtn').addEventListener('click', function () {
+    if (!selectedTeacherId) return;
+    window.ArchiviaUI.clearTeacherPhoto(selectedTeacherId);
+    window.ArchiviaUI.showToast('Teacher photo removed.');
+    renderTeacherPhotoPreview();
+    draw();
+  });
+
+  await load();
+});

@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: https:; style-src 'self'; script-src 'self'; connect-src 'self' http://127.0.0.1:4000; base-uri 'self'; form-action 'self'; frame-ancestors 'none'" />
+  <meta name="referrer" content="no-referrer" />
+  <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=()" />
+  <title>Teacher Management | ARCHIVIA</title>
+  <link rel="stylesheet" href="assets/css/main.css" />
+  <link rel="icon" type="image/jpeg" href="assets/images/SPEDlogo.jpg" />
+</head>
+<body data-required-role="admin">
+  <div class="app-layout">
+    <aside class="sidebar">
+      <div class="brand">ARCHIVIA</div>
+      <nav class="nav">
+        <a class="nav-link" href="dashboard-admin.html" data-role="admin">Admin Dashboard</a>
+        <a class="nav-link" href="dashboard-teacher.html" data-role="teacher">Teacher Dashboard</a>
+        <a class="nav-link" href="students.html">Students</a>
+        <a class="nav-link" href="documents.html">Document Archive</a>
+        <a class="nav-link active" href="teacher-management.html" data-role="admin">Teacher Management</a>
+        <a class="nav-link" href="activity-logs.html">Activity Logs</a>
+        <a class="nav-link" href="settings.html" data-role="admin">Settings</a>
+      </nav>
+      <div class="sidebar-actions">
+        <button class="btn btn-secondary btn-sidebar-logout" type="button" data-logout>Log Out</button>
+      </div>
+    </aside>
+    <div class="main">
+      <header class="topbar">
+        <div class="search-wrap"><input id="globalSearch" class="input" placeholder="Search student name or batch year (1988+)" /></div>
+        <span class="muted">Admin Only</span>
+      </header>
+      <main class="content">
+        <section class="page-head">
+          <div>
+            <h1 class="page-title">Teacher Management</h1>
+            <p class="page-meta">Manage teacher account access and statuses</p>
+          </div>
+          <button class="btn btn-primary" id="newTeacherBtn">Add Teacher</button>
+        </section>
+        <section class="grid-cards" id="teacherSummary"></section>
+        <section class="card">
+          <div class="table-wrap table-top-gap">
+            <table class="table">
+              <thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Action</th></tr></thead>
+              <tbody id="teacherTableBody"></tbody>
+            </table>
+          </div>
+        </section>
+        <footer class="muted footer-credit">Developed by FumarDev - ARCHIVIA System</footer>
+      </main>
+    </div>
+  </div>
+
+  <div class="modal" id="teacherPhotoModal" role="dialog" aria-modal="true" aria-labelledby="teacherPhotoTitle">
+    <div class="modal-card">
+      <div class="modal-head"><h3 id="teacherPhotoTitle">Manage Teacher Profile Picture</h3></div>
+      <div class="modal-body">
+        <div id="teacherPhotoPreview" class="table-top-gap"></div>
+        <input id="teacherPhotoInput" class="hidden" type="file" accept="image/*" />
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-secondary" id="uploadTeacherPhotoBtn" type="button">Upload Picture</button>
+        <button class="btn btn-danger" id="removeTeacherPhotoBtn" type="button">Remove Picture</button>
+        <button class="btn btn-secondary" data-modal-close="#teacherPhotoModal" type="button">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toastStack" class="toast-stack" aria-live="polite"></div>
+  <script src="assets/js/mock-data.js"></script>
+  <script src="assets/js/config.js"></script>
+  <script src="assets/js/services/api.js"></script>
+  <script src="assets/js/app.js"></script>
+  <script src="assets/js/pages/teacher-management.js"></script>
+</body>
+</html>
+
+

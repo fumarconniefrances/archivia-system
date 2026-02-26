@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: https:; style-src 'self'; script-src 'self'; connect-src 'self' http://127.0.0.1:4000; base-uri 'self'; form-action 'self'; frame-ancestors 'none'" />
+  <meta name="referrer" content="no-referrer" />
+  <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=()" />
+  <title>Settings | ARCHIVIA</title>
+  <link rel="stylesheet" href="assets/css/main.css" />
+  <link rel="icon" type="image/jpeg" href="assets/images/SPEDlogo.jpg" />
+</head>
+<body data-required-role="admin">
+  <div class="app-layout">
+    <aside class="sidebar">
+      <div class="brand">ARCHIVIA</div>
+      <nav class="nav">
+        <a class="nav-link" href="dashboard-admin.html" data-role="admin">Admin Dashboard</a>
+        <a class="nav-link" href="dashboard-teacher.html" data-role="teacher">Teacher Dashboard</a>
+        <a class="nav-link" href="students.html">Students</a>
+        <a class="nav-link" href="documents.html">Document Archive</a>
+        <a class="nav-link" href="teacher-management.html" data-role="admin">Teacher Management</a>
+        <a class="nav-link" href="activity-logs.html">Activity Logs</a>
+        <a class="nav-link active" href="settings.html" data-role="admin">Settings</a>
+      </nav>
+      <div class="sidebar-actions">
+        <button class="btn btn-secondary btn-sidebar-logout" type="button" data-logout>Log Out</button>
+      </div>
+    </aside>
+    <div class="main">
+      <header class="topbar">
+        <div class="search-wrap"><input id="globalSearch" class="input" placeholder="Search student name or batch year (1988+)" /></div>
+        <span class="muted">System Settings</span>
+      </header>
+      <main class="content">
+        <section class="page-head">
+          <div>
+            <h1 class="page-title">Settings</h1>
+            <p class="page-meta">Institution preferences and data protection controls</p>
+          </div>
+        </section>
+        <section class="grid-cards" id="settingsSummary">
+          <article class="card">
+            <h2>Security Status</h2>
+            <div class="form-grid table-top-gap">
+              <div class="detail-item">Role-based access control: Enabled</div>
+              <div class="detail-item">Daily audit capture: Enabled</div>
+            </div>
+          </article>
+          <article class="card">
+            <h2>Data Safety</h2>
+            <div class="form-grid table-top-gap">
+              <div class="detail-item">Automatic backup: Scheduled</div>
+              <div class="detail-item">Archive integrity check: Active</div>
+            </div>
+          </article>
+        </section>
+        <section class="card form-grid">
+          <div class="form-field"><label class="label" for="schoolName">School Name</label><input class="input" id="schoolName" value="Archivia Integrated School" /></div>
+          <div class="form-field"><label class="label" for="retention">Data Retention Policy</label><select class="select" id="retention"><option>5 Years</option><option>7 Years</option><option>10 Years</option></select></div>
+          <div class="form-field"><label class="label" for="logLevel">Audit Log Level</label><select class="select" id="logLevel"><option>Detailed</option><option>Standard</option></select></div>
+          <div class="toolbar">
+            <button class="btn btn-primary" id="saveSettingsBtn">Save Settings</button>
+          </div>
+        </section>
+        <footer class="muted footer-credit">Developed by FumarDev - ARCHIVIA System</footer>
+      </main>
+    </div>
+  </div>
+  <div id="toastStack" class="toast-stack" aria-live="polite"></div>
+  <script src="assets/js/mock-data.js"></script>
+  <script src="assets/js/config.js"></script>
+  <script src="assets/js/services/api.js"></script>
+  <script src="assets/js/app.js"></script>
+  <script src="assets/js/pages/settings.js"></script>
+</body>
+</html>
+

@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: https:; style-src 'self'; script-src 'self'; connect-src 'self' http://127.0.0.1:4000; base-uri 'self'; form-action 'self'; frame-ancestors 'none'" />
+  <meta name="referrer" content="no-referrer" />
+  <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=()" />
+  <title>ARCHIVIA Login</title>
+  <link rel="stylesheet" href="assets/css/main.css" />
+  <link rel="icon" type="image/jpeg" href="assets/images/SPEDlogo.jpg" />
+</head>
+<body>
+  <main class="auth-layout">
+    <section class="auth-card" aria-labelledby="loginTitle">
+      <header class="auth-header">
+        <img class="auth-logo" src="assets/images/SPEDlogo.jpg" alt="ARCHIVIA official logo" loading="lazy" />
+        <h1 id="loginTitle" class="auth-title">ARCHIVIA</h1>
+        <p class="auth-subtitle">SPED Student Records Management System</p>
+      </header>
+      <form class="form-grid" id="loginForm">
+        <div class="form-field">
+          <label class="label" for="username">Username</label>
+          <input class="input" id="username" required />
+        </div>
+        <div class="form-field">
+          <label class="label" for="password">Password</label>
+          <input class="input" type="password" id="password" required />
+        </div>
+        <div class="form-field">
+          <label class="label" for="role">Access Role</label>
+          <select class="select" id="role" required>
+            <option value="admin">Administrator</option>
+            <option value="teacher">Teacher (View Only)</option>
+          </select>
+        </div>
+        <button type="submit" class="btn btn-primary">Sign In</button>
+        <p class="muted">Authorized school personnel only. All actions are logged for compliance.</p>
+      </form>
+    </section>
+    <footer class="muted footer-credit">Developed by FumarDev - ARCHIVIA System</footer>
+  </main>
+  <div id="toastStack" class="toast-stack" aria-live="polite"></div>
+  <script src="assets/js/mock-data.js"></script>
+  <script src="assets/js/config.js"></script>
+  <script src="assets/js/services/api.js"></script>
+  <script src="assets/js/app.js"></script>
+  <script src="assets/js/pages/login.js"></script>
+</body>
+</html>
