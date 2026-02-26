@@ -135,8 +135,16 @@ document.addEventListener('DOMContentLoaded', async function () {
         docInput.onchange = function (event) {
           var file = event.target.files && event.target.files[0];
           if (!file) return;
-          window.ArchiviaUI.showToast('Document uploaded to this student profile.');
-          docInput.value = '';
+          var formData = new FormData();
+          formData.append('student_id', String(student.id));
+          formData.append('file', file);
+          window.ArchiviaApi.uploadDocument(formData).then(function () {
+            window.ArchiviaUI.showToast('Document uploaded to this student profile.');
+            docInput.value = '';
+            load();
+          }).catch(function (error) {
+            window.ArchiviaUI.showToast(error.message || 'Upload failed.');
+          });
         };
       }
 

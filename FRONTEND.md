@@ -87,25 +87,24 @@ Patterns included:
 - Muted metadata and hierarchy
 - Soft shadows and consistent spacing scale
 
-## Mock API Layer (Frontend-only)
+## API Layer (Backend-connected)
 
 `assets/js/services/api.js` provides:
 
 - `login`, `logout`, `me`
-- `getStudents`, `getDocuments`, `getTeachers`, `getLogs`
+- `getStudents`, `createStudent`, `updateStudent`, `deleteStudent`
+- `getDocuments`, `uploadDocument`
+- `getTeachers`, `addTeacher`
+- `getLogs`
 - `withRetry`
 
-Default mode is mock-only (no backend required). It reads from:
-- `assets/js/mock-data.js`
+Example:
 
-## Example Data
-
-`assets/js/mock-data.js` contains representative institutional records:
-
-- Students
-- Documents
-- Teachers
-- Audit logs
+```js
+// Load students for SY 2026-2027 and Male only
+ArchiviaApi.getStudents({ sy: 'SY 2026-2027', sex: 'Male', q: '' })
+  .then(rows => console.log(rows));
+```
 
 ## Quality Status
 
@@ -114,5 +113,4 @@ Default mode is mock-only (no backend required). It reads from:
   - `npm run lint:css`
   - `npm run lint:html`
 - Demo-ready frontend build
-- No backend dependency required for preview
-
+- Backend required for data

@@ -251,40 +251,29 @@ document.addEventListener('DOMContentLoaded', async function () {
       var firstName = nameParts.shift() || '';
       var lastName = nameParts.join(' ');
 
-      var nextId = all.reduce(function (maxId, student) {
-        return Math.max(maxId, Number(student.id) || 0);
-      }, 0) + 1;
-
-      all.push({
-        id: nextId,
-        studentId: studentId,
-        firstName: firstName,
-        lastName: lastName,
-        sex: sex,
-        batchYear: schoolYear,
-        gradeLevel: gradeLevel,
-        section: section,
-        createdAt: new Date().toISOString()
+      window.ArchiviaApi.withRetry(function () {
+        return window.ArchiviaApi.createStudent({
+          student_id: studentId,
+          first_name: firstName,
+          last_name: lastName,
+          sex: sex,
+          batch_year: schoolYear,
+          grade_level: gradeLevel,
+          section: section
+        });
+      }, 1).then(function () {
+        if (studentLrnInput) studentLrnInput.value = '';
+        if (studentNameInput) studentNameInput.value = '';
+        if (studentGradeInput) studentGradeInput.value = '';
+        if (studentSectionInput) studentSectionInput.value = '';
+        if (studentSexInput) studentSexInput.value = '';
+        if (studentSchoolYearInput) studentSchoolYearInput.value = '';
+        window.ArchiviaUI.closeModal('#addStudentModal');
+        load();
+        window.ArchiviaUI.showToast('Student record saved.');
+      }).catch(function (error) {
+        window.ArchiviaUI.showToast(error.message || 'Failed to save student.');
       });
-
-      if (studentLrnInput) studentLrnInput.value = '';
-      if (studentNameInput) studentNameInput.value = '';
-      if (studentGradeInput) studentGradeInput.value = '';
-      if (studentSectionInput) studentSectionInput.value = '';
-      if (studentSexInput) studentSexInput.value = '';
-      if (studentSchoolYearInput) studentSchoolYearInput.value = '';
-
-      window.ArchiviaUI.closeModal('#addStudentModal');
-      var updatedBucketCount = Array.from(new Set(all.map(function (s) {
-        return getSchoolYearStart(getStudentYear(s));
-      }).filter(function (y) { return y >= 1988; }))).length;
-      window.ArchiviaUI.renderMetricCards('#studentSummary', [
-        { title: 'Total Records', value: all.length },
-        { title: 'School Years', value: updatedBucketCount }
-      ]);
-      renderSchoolYears(all);
-      showSchoolYears();
-      window.ArchiviaUI.showToast('Student record saved.');
     });
   }
   if (backToYearsBtn) {

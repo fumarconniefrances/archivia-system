@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', async function () {
   var saveTeacherBtn = document.getElementById('saveTeacherBtn');
   var teacherFullNameInput = document.getElementById('teacherFullName');
   var teacherEmailInput = document.getElementById('teacherEmail');
+  var teacherPasswordInput = document.getElementById('teacherPassword');
   var teacherDepartmentInput = document.getElementById('teacherDepartment');
 
   function photoCell(name, teacherId, fallback) {
@@ -101,30 +102,30 @@ document.addEventListener('DOMContentLoaded', async function () {
     saveTeacherBtn.addEventListener('click', function () {
       var fullName = teacherFullNameInput ? teacherFullNameInput.value.trim() : '';
       var email = teacherEmailInput ? teacherEmailInput.value.trim() : '';
+      var password = teacherPasswordInput ? teacherPasswordInput.value : '';
       var department = teacherDepartmentInput ? teacherDepartmentInput.value.trim() : '';
-      if (!fullName || !email || !department) {
+      if (!fullName || !email || !password || !department) {
         window.ArchiviaUI.showToast('Please complete all required fields.');
         return;
       }
-
-      var nextId = all.reduce(function (maxId, teacher) {
-        return Math.max(maxId, Number(teacher.id) || 0);
-      }, 0) + 1;
-
-      all.push({
-        id: nextId,
-        name: fullName,
-        email: email,
-        department: department
+      window.ArchiviaApi.withRetry(function () {
+        return window.ArchiviaApi.addTeacher({
+          name: fullName,
+          email: email,
+          password: password,
+          department: department
+        });
+      }, 1).then(function () {
+        if (teacherFullNameInput) teacherFullNameInput.value = '';
+        if (teacherEmailInput) teacherEmailInput.value = '';
+        if (teacherPasswordInput) teacherPasswordInput.value = '';
+        if (teacherDepartmentInput) teacherDepartmentInput.value = '';
+        window.ArchiviaUI.closeModal('#addTeacherModal');
+        load();
+        window.ArchiviaUI.showToast('Teacher record saved.');
+      }).catch(function (error) {
+        window.ArchiviaUI.showToast(error.message || 'Failed to save teacher.');
       });
-
-      if (teacherFullNameInput) teacherFullNameInput.value = '';
-      if (teacherEmailInput) teacherEmailInput.value = '';
-      if (teacherDepartmentInput) teacherDepartmentInput.value = '';
-
-      window.ArchiviaUI.closeModal('#addTeacherModal');
-      draw();
-      window.ArchiviaUI.showToast('Teacher record saved.');
     });
   }
 

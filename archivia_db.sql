@@ -83,6 +83,7 @@ CREATE TABLE `students` (
   `student_id` varchar(50) NOT NULL,
   `first_name` varchar(100) NOT NULL,
   `last_name` varchar(100) NOT NULL,
+  `sex` enum('Male','Female') NOT NULL,
   `batch_year` int(11) NOT NULL,
   `grade_level` varchar(50) DEFAULT NULL,
   `section` varchar(50) DEFAULT NULL,
@@ -131,6 +132,7 @@ CREATE TABLE `users` (
   `password` varchar(255) NOT NULL,
   `role` enum('ADMIN','TEACHER') NOT NULL,
   `status` enum('ACTIVE','DISABLED') NOT NULL DEFAULT 'ACTIVE',
+  `department` varchar(100) DEFAULT NULL,
   `last_login_at` datetime DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
@@ -296,3 +298,7 @@ COMMIT;
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+
+-- Post-creation migrations (run once on an existing DB)
+-- ALTER TABLE students ADD COLUMN sex ENUM('Male','Female') NOT NULL AFTER last_name;
+-- ALTER TABLE users ADD COLUMN department VARCHAR(100) NULL AFTER status;
