@@ -1,4 +1,4 @@
-# ARCHIVIA Backup Procedure (Localhost)
+# ARCHIVIA Backup Procedure (Localhost + External HDD)
 
 ## Daily Backup Script
 
@@ -6,8 +6,11 @@ Use the PowerShell script:
 
 `scripts/backup_archivia.ps1`
 
-Default output directory:
-`C:\ARCHIVIA_BACKUPS\`
+Default local output directory:
+`C:\ARCHIVIA_BACKUPS\LOCAL\`
+
+Default external output directory:
+`E:\ARCHIVIA_BACKUPS\`
 
 File format:
 `archivia_backup_YYYYMMDD_HHMMSS.sql`
@@ -15,13 +18,15 @@ File format:
 ## Task Scheduler (Daily 6:30 PM)
 
 1. Open Task Scheduler.
-2. Create Task → Name: `ARCHIVIA Daily Backup`
+2. Create Task → Name: `ARCHIVIA_DAILY_BACKUP`
 3. Trigger: Daily → 6:30 PM
 4. Action: Start a program
    - Program/script: `powershell.exe`
    - Add arguments:
      `-NoProfile -ExecutionPolicy Bypass -File "C:\xampp\htdocs\ARCHIVA\scripts\backup_archivia.ps1"`
-5. Conditions: Uncheck “Start the task only if the computer is on AC power” if needed.
+5. General:
+   - Run whether user is logged in or not
+   - Run with highest privileges
 6. Settings: Allow task to be run on demand.
 
 ## Manual Backup Test
@@ -29,11 +34,20 @@ File format:
 Run:
 `powershell.exe -NoProfile -ExecutionPolicy Bypass -File "C:\xampp\htdocs\ARCHIVA\scripts\backup_archivia.ps1"`
 
-Confirm file created in `C:\ARCHIVIA_BACKUPS\`.
+Confirm file created in `C:\ARCHIVIA_BACKUPS\LOCAL\`.
+
+Check log:
+`C:\ARCHIVIA_BACKUPS\backup_log.txt`
 
 ## Restore Test (Use Test DB)
 
 1. Create test database: `archivia_db_test`
 2. Restore:
-   `C:\xampp\mysql\bin\mysql.exe -u root archivia_db_test < C:\ARCHIVIA_BACKUPS\archivia_backup_YYYYMMDD_HHMMSS.sql`
+   `C:\xampp\mysql\bin\mysql.exe -u archivia_user -p archivia_test_restore < C:\ARCHIVIA_BACKUPS\LOCAL\archivia_backup_YYYYMMDD_HHMMSS.sql`
 3. Validate row counts and critical tables.
+
+## Weekly Compression (Optional)
+
+Add `-ZipWeekly` when you want Sunday ZIP archives:
+
+`powershell.exe -NoProfile -ExecutionPolicy Bypass -File "C:\xampp\htdocs\ARCHIVA\scripts\backup_archivia.ps1" -ZipWeekly`
