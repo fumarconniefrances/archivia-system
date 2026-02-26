@@ -10,6 +10,10 @@ function error_response($message, $code = 400) {
   json_response(['success' => false, 'message' => $message], $code);
 }
 
+function validation_error_response($errors) {
+  json_response(['success' => false, 'message' => 'Validation failed.', 'errors' => $errors], 422);
+}
+
 function get_json_input() {
   $raw = file_get_contents('php://input');
   if (!$raw) return [];
@@ -35,5 +39,15 @@ function log_action($pdo, $userId, $action, $entityType, $entityId, $oldValue, $
     ':old_value' => $oldValue ? json_encode($oldValue) : null,
     ':new_value' => $newValue ? json_encode($newValue) : null
   ]);
+}
+
+function get_pagination_params($defaultLimit = 50, $maxLimit = 200) {
+  $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+  $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : $defaultLimit;
+  if ($page < 1) $page = 1;
+  if ($limit < 1) $limit = $defaultLimit;
+  if ($limit > $maxLimit) $limit = $maxLimit;
+  $offset = ($page - 1) * $limit;
+  return [$page, $limit, $offset];
 }
 ?>

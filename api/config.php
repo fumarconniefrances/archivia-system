@@ -4,6 +4,8 @@ $dbHost = getenv('ARCHIVIA_DB_HOST') ?: '127.0.0.1';
 $dbName = getenv('ARCHIVIA_DB_NAME') ?: 'archivia_db';
 $dbUser = getenv('ARCHIVIA_DB_USER') ?: 'root';
 $dbPass = getenv('ARCHIVIA_DB_PASS') ?: '';
+$backupDir = getenv('ARCHIVIA_BACKUP_DIR') ?: 'C:\\ARCHIVIA_BACKUPS';
+$uploadDir = realpath(__DIR__ . '/../storage/uploads');
 
 $dsn = "mysql:host={$dbHost};dbname={$dbName};charset=utf8mb4";
 $options = [
@@ -20,4 +22,7 @@ try {
   echo json_encode(['success' => false, 'message' => 'Database connection failed.']);
   exit;
 }
+
+define('ARCHIVIA_BACKUP_DIR', $backupDir);
+define('ARCHIVIA_UPLOAD_DIR', $uploadDir ? $uploadDir : (__DIR__ . '/../storage/uploads'));
 ?>

@@ -23,6 +23,9 @@ if ($action === 'login' && $_SERVER['REQUEST_METHOD'] === 'POST') {
   if (!$user || $user['status'] !== 'ACTIVE' || !password_verify($password, $user['password'])) {
     error_response('Invalid credentials.', 401);
   }
+  if (!in_array($user['role'], ['ADMIN', 'RECORD_OFFICER'], true)) {
+    error_response('Invalid role.', 403);
+  }
 
   $_SESSION['user_id'] = (int)$user['id'];
   $_SESSION['role'] = $user['role'];

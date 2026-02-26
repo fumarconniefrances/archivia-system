@@ -17,6 +17,20 @@ function require_admin() {
   }
 }
 
+function require_role($roles) {
+  require_login();
+  if (!is_array($roles)) {
+    $roles = [$roles];
+  }
+  if (empty($_SESSION['role']) || !in_array($_SESSION['role'], $roles, true)) {
+    error_response('Forbidden', 403);
+  }
+}
+
+function require_record_officer() {
+  require_role(['ADMIN', 'RECORD_OFFICER']);
+}
+
 function soft_delete_filter() {
   return 'deleted_at IS NULL';
 }

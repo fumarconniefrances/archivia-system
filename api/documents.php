@@ -9,8 +9,34 @@ if (session_status() === PHP_SESSION_NONE) {
 
 $method = $_SERVER['REQUEST_METHOD'];
 
+if ($method === 'GET' && ($_GET['action'] ?? '') === 'download') {
+  require_record_officer();
+  $id = (int)($_GET['id'] ?? 0);
+  if ($id <= 0) error_response('Invalid document id.', 422);
+
+  $stmt = $pdo->prepare('SELECT id, original_name, stored_name, file_path, mime_type, file_size
+                         FROM documents WHERE id = :id AND deleted_at IS NULL LIMIT 1');
+  $stmt->execute([':id' => $id]);
+  $doc = $stmt->fetch();
+  if (!$doc) error_response('Document not found.', 404);
+
+  $path = __DIR__ . '/../' . $doc['file_path'];
+  $real = realpath($path);
+  $base = realpath(ARCHIVIA_UPLOAD_DIR);
+  if (!$real || !$base || strpos($real, $base) !== 0) {
+    error_response('Invalid document path.', 400);
+  }
+  if (!is_file($real)) error_response('File missing.', 404);
+
+  header('Content-Type: ' . $doc['mime_type']);
+  header('Content-Length: ' . $doc['file_size']);
+  header('Content-Disposition: inline; filename="' . basename($doc['original_name']) . '"');
+  readfile($real);
+  exit;
+}
+
 if ($method === 'GET') {
-  require_login();
+  require_record_officer();
   $studentId = (int)($_GET['student_id'] ?? 0);
   $params = [];
   $where = ['deleted_at IS NULL'];
@@ -26,7 +52,7 @@ if ($method === 'GET') {
 }
 
 if ($method === 'POST') {
-  require_login();
+  require_record_officer();
 
   $studentId = (int)($_POST['student_id'] ?? 0);
   if ($studentId <= 0) error_response('Invalid student id.', 422);
@@ -35,7 +61,8 @@ if ($method === 'POST') {
   $file = $_FILES['file'];
   if ($file['error'] !== UPLOAD_ERR_OK) error_response('File upload failed.', 400);
   if ($file['size'] > 10 * 1024 * 1024) error_response('File too large (max 10MB).', 422);
-  $mime = mime_content_type($file['tmp_name']);
+  $finfo = new finfo(FILEINFO_MIME_TYPE);
+  $mime = $finfo->file($file['tmp_name']);
   if ($mime !== 'application/pdf') error_response('Only PDF files are allowed.', 422);
 
   $stmt = $pdo->prepare('SELECT id, batch_year FROM students WHERE id = :id AND deleted_at IS NULL LIMIT 1');
@@ -52,13 +79,10 @@ if ($method === 'POST') {
       $groupId = (int)$pdo->lastInsertId();
     }
 
-    $stmt = $pdo->prepare('SELECT version_number FROM documents WHERE document_group_id = :group_id FOR UPDATE');
+    $stmt = $pdo->prepare('SELECT MAX(version_number) AS max_version FROM documents WHERE document_group_id = :group_id FOR UPDATE');
     $stmt->execute([':group_id' => $groupId]);
-    $versions = $stmt->fetchAll();
-    $nextVersion = 1;
-    foreach ($versions as $row) {
-      $nextVersion = max($nextVersion, (int)$row['version_number'] + 1);
-    }
+    $maxVersion = (int)($stmt->fetch()['max_version'] ?? 0);
+    $nextVersion = $maxVersion + 1;
 
     $stmt = $pdo->prepare('UPDATE documents SET is_current = 0 WHERE document_group_id = :group_id');
     $stmt->execute([':group_id' => $groupId]);
@@ -66,13 +90,13 @@ if ($method === 'POST') {
     $originalName = $file['name'];
     $storedName = uniqid('doc_', true) . '.pdf';
     $batchYear = (int)$student['batch_year'];
-    $dir = __DIR__ . '/../storage/uploads/' . $batchYear;
+    $dir = ARCHIVIA_UPLOAD_DIR . '/' . $batchYear;
     if (!is_dir($dir)) {
       mkdir($dir, 0775, true);
     }
     $safeName = sanitize_filename($storedName);
     $relativePath = 'storage/uploads/' . $batchYear . '/' . $safeName;
-    $targetPath = __DIR__ . '/../' . $relativePath;
+    $targetPath = ARCHIVIA_UPLOAD_DIR . '/' . $batchYear . '/' . $safeName;
 
     if (!move_uploaded_file($file['tmp_name'], $targetPath)) {
       throw new Exception('Failed to move uploaded file.');
@@ -105,6 +129,9 @@ if ($method === 'POST') {
     json_response(['success' => true, 'data' => ['id' => $docId]]);
   } catch (Exception $e) {
     $pdo->rollBack();
+    if (isset($targetPath) && is_file($targetPath)) {
+      unlink($targetPath);
+    }
     error_response('Upload failed.', 500);
   }
 }

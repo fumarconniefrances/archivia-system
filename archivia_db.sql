@@ -83,7 +83,7 @@ CREATE TABLE `students` (
   `student_id` varchar(50) NOT NULL,
   `first_name` varchar(100) NOT NULL,
   `last_name` varchar(100) NOT NULL,
-  `sex` enum('Male','Female') NOT NULL,
+  `sex` enum('MALE','FEMALE') NOT NULL,
   `batch_year` int(11) NOT NULL,
   `grade_level` varchar(50) DEFAULT NULL,
   `section` varchar(50) DEFAULT NULL,
@@ -130,7 +130,7 @@ CREATE TABLE `users` (
   `name` varchar(100) NOT NULL,
   `email` varchar(150) NOT NULL,
   `password` varchar(255) NOT NULL,
-  `role` enum('ADMIN','TEACHER') NOT NULL,
+  `role` enum('ADMIN','RECORD_OFFICER') NOT NULL,
   `status` enum('ACTIVE','DISABLED') NOT NULL DEFAULT 'ACTIVE',
   `department` varchar(100) DEFAULT NULL,
   `last_login_at` datetime DEFAULT NULL,
@@ -300,5 +300,8 @@ COMMIT;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 
 -- Post-creation migrations (run once on an existing DB)
--- ALTER TABLE students ADD COLUMN sex ENUM('Male','Female') NOT NULL AFTER last_name;
+-- ALTER TABLE students MODIFY COLUMN sex ENUM('MALE','FEMALE') NOT NULL;
+-- UPDATE students SET sex = UPPER(sex) WHERE sex IN ('Male','Female','MALE','FEMALE');
+-- ALTER TABLE users MODIFY COLUMN role ENUM('ADMIN','RECORD_OFFICER') NOT NULL;
+-- UPDATE users SET role = 'RECORD_OFFICER' WHERE role = 'TEACHER';
 -- ALTER TABLE users ADD COLUMN department VARCHAR(100) NULL AFTER status;

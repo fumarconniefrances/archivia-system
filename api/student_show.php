@@ -7,7 +7,7 @@ if (session_status() === PHP_SESSION_NONE) {
   session_start();
 }
 
-require_login();
+require_record_officer();
 
 $id = (int)($_GET['id'] ?? 0);
 if ($id <= 0) error_response('Invalid student id.', 422);
