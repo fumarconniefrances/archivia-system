@@ -7,8 +7,41 @@ $dbPass = getenv('ARCHIVIA_DB_PASS') ?: '';
 $backupDir = getenv('ARCHIVIA_BACKUP_DIR') ?: 'C:\\ARCHIVIA_BACKUPS';
 $uploadDir = realpath(__DIR__ . '/../storage/uploads');
 
+error_reporting(E_ALL);
 ini_set('display_errors', '0');
+ini_set('display_startup_errors', '0');
 ini_set('log_errors', '1');
+ini_set('error_log', __DIR__ . '/../storage/logs/php_error.log');
+
+set_exception_handler(function ($e) {
+  error_log($e);
+  http_response_code(500);
+  header('Content-Type: application/json');
+  echo json_encode(['success' => false, 'message' => 'Internal server error']);
+  exit;
+});
+
+set_error_handler(function ($severity, $message, $file, $line) {
+  if (!(error_reporting() & $severity)) {
+    return false;
+  }
+  error_log(sprintf('PHP Error [%s]: %s in %s:%d', $severity, $message, $file, $line));
+  http_response_code(500);
+  header('Content-Type: application/json');
+  echo json_encode(['success' => false, 'message' => 'Internal server error']);
+  exit;
+});
+
+register_shutdown_function(function () {
+  $error = error_get_last();
+  if ($error && in_array($error['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR], true)) {
+    error_log(sprintf('PHP Fatal Error [%s]: %s in %s:%d', $error['type'], $error['message'], $error['file'], $error['line']));
+    http_response_code(500);
+    header('Content-Type: application/json');
+    echo json_encode(['success' => false, 'message' => 'Internal server error']);
+    exit;
+  }
+});
 
 $dsn = "mysql:host={$dbHost};dbname={$dbName};charset=utf8mb4";
 $options = [
