@@ -6,27 +6,6 @@ require_once __DIR__ . '/middleware.php';
 start_secure_session();
 enforce_csrf_for_request();
 
-function ensure_org_chart_table($pdo) {
-  $sql = '
-    CREATE TABLE IF NOT EXISTS organization_chart_members (
-      id INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
-      name VARCHAR(120) NOT NULL,
-      position_title VARCHAR(120) NOT NULL,
-      photo_data LONGTEXT NULL,
-      sort_order INT(11) NOT NULL DEFAULT 0,
-      is_active TINYINT(1) NOT NULL DEFAULT 1,
-      created_by INT(10) UNSIGNED NULL,
-      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-      PRIMARY KEY (id),
-      KEY idx_org_chart_active_sort (is_active, sort_order, id),
-      KEY idx_org_chart_created_by (created_by),
-      CONSTRAINT fk_org_chart_created_by FOREIGN KEY (created_by) REFERENCES users (id) ON DELETE SET NULL ON UPDATE CASCADE
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-  ';
-  $pdo->exec($sql);
-}
-
 function normalize_photo_data($value) {
   if ($value === null) return null;
   $text = trim((string)$value);
@@ -40,7 +19,6 @@ function normalize_photo_data($value) {
   return $text;
 }
 
-ensure_org_chart_table($pdo);
 $method = $_SERVER['REQUEST_METHOD'];
 
 if ($method === 'GET') {

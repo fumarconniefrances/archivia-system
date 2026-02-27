@@ -7,24 +7,6 @@ start_secure_session();
 
 $action = $_GET['action'] ?? '';
 
-function ensure_login_attempts_table($pdo) {
-  $pdo->exec('
-    CREATE TABLE IF NOT EXISTS login_attempts (
-      id INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
-      login_key VARCHAR(190) NOT NULL,
-      ip_address VARCHAR(45) NOT NULL,
-      attempt_count INT(10) UNSIGNED NOT NULL DEFAULT 0,
-      first_attempt_ts INT(10) UNSIGNED NOT NULL DEFAULT 0,
-      last_attempt_ts INT(10) UNSIGNED NOT NULL DEFAULT 0,
-      blocked_until_ts INT(10) UNSIGNED NOT NULL DEFAULT 0,
-      PRIMARY KEY (id),
-      UNIQUE KEY uq_login_attempts_key_ip (login_key, ip_address),
-      KEY idx_login_attempts_last_attempt (last_attempt_ts),
-      KEY idx_login_attempts_blocked_until (blocked_until_ts)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-  ');
-}
-
 function client_ip_address() {
   return trim((string)($_SERVER['REMOTE_ADDR'] ?? 'unknown'));
 }
@@ -103,7 +85,6 @@ function users_has_department_column($pdo) {
 
 if ($action === 'login' && $_SERVER['REQUEST_METHOD'] === 'POST') {
   verify_csrf_token();
-  ensure_login_attempts_table($pdo);
 
   $data = get_json_input();
   $login = trim((string)($data['email'] ?? $data['login'] ?? ''));

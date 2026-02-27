@@ -7,21 +7,6 @@ start_secure_session();
 enforce_csrf_for_request(['PUT']);
 require_admin();
 
-function ensure_settings_table($pdo) {
-  $sql = '
-    CREATE TABLE IF NOT EXISTS system_settings (
-      setting_key VARCHAR(80) NOT NULL,
-      setting_value TEXT NULL,
-      updated_by INT(10) UNSIGNED NULL,
-      updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-      PRIMARY KEY (setting_key),
-      KEY idx_system_settings_updated_by (updated_by),
-      CONSTRAINT fk_system_settings_updated_by FOREIGN KEY (updated_by) REFERENCES users (id) ON DELETE SET NULL ON UPDATE CASCADE
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-  ';
-  $pdo->exec($sql);
-}
-
 function default_settings() {
   return [
     'school_name' => 'Archivia Integrated School',
@@ -41,7 +26,6 @@ function load_settings_map($pdo) {
   return $map;
 }
 
-ensure_settings_table($pdo);
 $method = $_SERVER['REQUEST_METHOD'];
 
 if ($method === 'GET') {
