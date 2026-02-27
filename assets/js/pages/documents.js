@@ -41,10 +41,6 @@ document.addEventListener('DOMContentLoaded', async function () {
     var yearMatch = parseSchoolYear(keyword);
     var rows = students.map(function (student) {
       var studentDocs = all.filter(function (doc) { return doc.studentId === student.id; });
-      var lastUploaded = studentDocs.reduce(function (latest, doc) {
-        var ts = new Date(doc.createdAt || 0).getTime();
-        return ts > latest ? ts : latest;
-      }, 0);
       return {
         id: student.id,
         studentId: student.studentId || '',

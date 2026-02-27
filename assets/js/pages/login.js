@@ -20,15 +20,35 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   var safeRedirect = sanitizeRedirect(redirect);
+  var roleInput = document.getElementById('role');
+
+  function normalizeRole(value) {
+    var role = String(value || '').trim().toLowerCase();
+    if (role === 'teacher') return 'record_officer';
+    return role;
+  }
+
   var form = document.getElementById('loginForm');
   form.addEventListener('submit', async function (event) {
     event.preventDefault();
     var email = document.getElementById('username').value.trim();
     var password = document.getElementById('password').value;
 
+    var selectedRole = normalizeRole(roleInput ? roleInput.value : '');
+
     try {
       var profile = await window.ArchiviaApi.login(email, password);
-      var userRole = String(profile.role || '').toLowerCase();
+      var userRole = normalizeRole(profile.role);
+
+      if (selectedRole && selectedRole !== userRole) {
+        try {
+          await window.ArchiviaApi.logout();
+        } catch (_error) {
+          // Ignore logout errors for mismatch flow.
+        }
+        window.ArchiviaUI.showToast('Selected role does not match your account.');
+        return;
+      }
 
       sessionStorage.setItem('archivia_role', userRole);
       localStorage.removeItem('archivia_role');

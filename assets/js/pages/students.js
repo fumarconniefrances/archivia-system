@@ -16,7 +16,6 @@ document.addEventListener('DOMContentLoaded', async function () {
   var yearStudentsTitle = document.getElementById('yearStudentsTitle');
   var backToYearsBtn = document.getElementById('backToYearsBtn');
   var sexFilter = document.getElementById('sexFilter');
-  var activeYear = 0;
   var activeYearStudents = [];
   var yearsSet = new Set();
 
@@ -117,7 +116,6 @@ document.addEventListener('DOMContentLoaded', async function () {
   }
 
   function showYearStudents(year, students) {
-    activeYear = year;
     activeYearStudents = students.slice();
     if (yearStudentsTitle) {
       if (typeof year === 'number' && year >= 1988) {

@@ -1,5 +1,11 @@
 (function () {
-  var ALLOWED_ROLES = { admin: true, teacher: true };
+  var ALLOWED_ROLES = { admin: true, record_officer: true, teacher: true };
+
+  function normalizeRole(role) {
+    var raw = String(role || '').trim().toLowerCase();
+    if (raw === 'teacher') return 'record_officer';
+    return raw;
+  }
 
   function qs(sel, root) {
     return (root || document).querySelector(sel);
@@ -231,12 +237,13 @@
   }
 
   function getCurrentRole() {
-    var role = sessionStorage.getItem('archivia_role') || '';
+    var role = normalizeRole(sessionStorage.getItem('archivia_role') || '');
     return ALLOWED_ROLES[role] ? role : '';
   }
 
   function setCurrentRole(role) {
-    if (ALLOWED_ROLES[role]) sessionStorage.setItem('archivia_role', role);
+    var normalizedRole = normalizeRole(role);
+    if (ALLOWED_ROLES[normalizedRole]) sessionStorage.setItem('archivia_role', normalizedRole);
   }
 
   function getPhotoStore() {
@@ -303,7 +310,7 @@
     var raw = document.body.getAttribute('data-required-role');
     if (!raw) return [];
     return raw.split(',').map(function (item) {
-      return item.trim().toLowerCase();
+      return normalizeRole(item.trim().toLowerCase());
     }).filter(function (item) {
       return ALLOWED_ROLES[item];
     });
@@ -313,7 +320,7 @@
     if (!window.ArchiviaApi || typeof window.ArchiviaApi.me !== 'function') return getCurrentRole();
     try {
       var profile = await window.ArchiviaApi.me();
-      var role = String(profile && profile.role || '').toLowerCase();
+      var role = normalizeRole(profile && profile.role);
       if (ALLOWED_ROLES[role]) {
         setCurrentRole(role);
         return role;
@@ -349,11 +356,11 @@
 
     qsa('[data-role]').forEach(function (node) {
       var raw = node.getAttribute('data-role') || '';
-      var allowed = raw.split(',').map(function (item) { return item.trim().toLowerCase(); }).filter(Boolean);
+      var allowed = raw.split(',').map(function (item) { return normalizeRole(item.trim().toLowerCase()); }).filter(Boolean);
       if (allowed.length && allowed.indexOf(role) === -1) node.classList.add('hidden');
     });
 
-    if (role !== 'teacher') return;
+    if (role !== 'record_officer') return;
     var actionIds = ['addStudentBtn', 'newTeacherBtn', 'editProfileBtn', 'uploadProfileDocBtn', 'uploadDocBtn', 'saveSettingsBtn', 'backupBtn'];
     actionIds.forEach(function (id) {
       var node = qs('#' + id);
