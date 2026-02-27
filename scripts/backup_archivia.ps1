@@ -5,9 +5,60 @@ param(
   [string]$Password = "",
   [string]$LocalDir = "C:\\ARCHIVIA_BACKUPS\\LOCAL",
   [string]$ExternalDir = "D:\\ARCHIVIA_BACKUPS",
+  [string]$ExternalDriveLabel = "My Passport",
   [string]$LogFile = "C:\\ARCHIVIA_BACKUPS\\backup_log.txt",
   [switch]$ZipWeekly
 )
+
+function Write-BackupLog {
+  param([string]$Message)
+  Add-Content $LogFile ("{0} - {1}" -f (Get-Date), $Message)
+}
+
+function Test-ExternalBackupTarget {
+  param(
+    [string]$TargetDir,
+    [string]$ExpectedLabel
+  )
+
+  $driveRoot = Split-Path -Path $TargetDir -Qualifier
+  if ([string]::IsNullOrWhiteSpace($driveRoot)) {
+    return @{ IsValid = $false; Reason = "External path has no drive qualifier: $TargetDir" }
+  }
+
+  if (-not (Test-Path -LiteralPath $driveRoot)) {
+    return @{ IsValid = $false; Reason = "External drive not detected: $driveRoot" }
+  }
+
+  $driveLetter = $driveRoot.TrimEnd('\',':')
+  $volume = Get-Volume -DriveLetter $driveLetter -ErrorAction SilentlyContinue
+  if (-not $volume) {
+    return @{ IsValid = $false; Reason = "Unable to read drive metadata for $driveRoot" }
+  }
+  if ($volume.FileSystemLabel -ne $ExpectedLabel) {
+    return @{ IsValid = $false; Reason = "External drive label mismatch. Expected '$ExpectedLabel' but found '$($volume.FileSystemLabel)'" }
+  }
+
+  $bitLockerCmd = Get-Command -Name Get-BitLockerVolume -ErrorAction SilentlyContinue
+  if (-not $bitLockerCmd) {
+    return @{ IsValid = $false; Reason = "Get-BitLockerVolume is unavailable; cannot verify encryption state." }
+  }
+
+  $bitLocker = Get-BitLockerVolume -MountPoint $driveRoot -ErrorAction SilentlyContinue
+  if (-not $bitLocker) {
+    return @{ IsValid = $false; Reason = "BitLocker metadata unavailable for $driveRoot." }
+  }
+
+  if ($bitLocker.ProtectionStatus -ne 'On') {
+    return @{ IsValid = $false; Reason = "BitLocker protection is not enabled on $driveRoot." }
+  }
+
+  if ($bitLocker.LockStatus -ne 'Unlocked') {
+    return @{ IsValid = $false; Reason = "BitLocker drive is locked: $driveRoot." }
+  }
+
+  return @{ IsValid = $true; Reason = "External drive verified: $driveRoot ($ExpectedLabel)" }
+}
 
 if (-not (Test-Path -LiteralPath $LocalDir)) {
   New-Item -ItemType Directory -Force -Path $LocalDir | Out-Null
@@ -28,28 +79,33 @@ if ($Password -ne "") {
   Out-File -FilePath $backupFile -Encoding utf8
 
 if ($LASTEXITCODE -eq 0 -and (Test-Path -LiteralPath $backupFile)) {
-  Add-Content $LogFile ("{0} - Backup SUCCESS: {1}" -f (Get-Date), $backupFile)
+  Write-BackupLog ("Backup SUCCESS: {0}" -f $backupFile)
 
-  if (Test-Path -LiteralPath $ExternalDir) {
-    Copy-Item -Path $backupFile -Destination $ExternalDir -Force
-    Add-Content $LogFile ("{0} - External copy SUCCESS" -f (Get-Date))
-  } else {
-    Add-Content $LogFile ("{0} - WARNING: External HDD not detected" -f (Get-Date))
+  $externalCheck = Test-ExternalBackupTarget -TargetDir $ExternalDir -ExpectedLabel $ExternalDriveLabel
+  if (-not $externalCheck.IsValid) {
+    Write-BackupLog ("External backup validation FAILED: {0}" -f $externalCheck.Reason)
+    Write-Error $externalCheck.Reason
+    exit 1
   }
+
+  if (-not (Test-Path -LiteralPath $ExternalDir)) {
+    New-Item -ItemType Directory -Force -Path $ExternalDir | Out-Null
+  }
+
+  Copy-Item -Path $backupFile -Destination $ExternalDir -Force
+  Write-BackupLog "External copy SUCCESS"
 
   if ($ZipWeekly -and (Get-Date).DayOfWeek -eq 'Sunday') {
     $zipFile = "$backupFile.zip"
     Compress-Archive -Path $backupFile -DestinationPath $zipFile -Force
     if (Test-Path -LiteralPath $zipFile) {
-      Add-Content $LogFile ("{0} - Weekly ZIP created: {1}" -f (Get-Date), $zipFile)
-      if (Test-Path -LiteralPath $ExternalDir) {
-        Copy-Item -Path $zipFile -Destination $ExternalDir -Force
-        Add-Content $LogFile ("{0} - Weekly ZIP external copy SUCCESS" -f (Get-Date))
-      }
+      Write-BackupLog ("Weekly ZIP created: {0}" -f $zipFile)
+      Copy-Item -Path $zipFile -Destination $ExternalDir -Force
+      Write-BackupLog "Weekly ZIP external copy SUCCESS"
     }
   }
 } else {
-  Add-Content $LogFile ("{0} - Backup FAILED" -f (Get-Date))
+  Write-BackupLog "Backup FAILED"
   Write-Error "Backup failed."
   exit 1
 }
