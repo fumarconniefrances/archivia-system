@@ -1,12 +1,34 @@
 document.addEventListener('DOMContentLoaded', async function () {
   const searchInput = document.getElementById('globalSearch');
-  const prevBtn = document.getElementById('logsPrevBtn');
-  const nextBtn = document.getElementById('logsNextBtn');
-  const pageInfo = document.getElementById('logsPageInfo');
+  const paginationRoot = document.getElementById('logsPagination');
   const pageSize = 10;
   let all = [];
   let currentPage = 1;
   let totalItems = 0;
+  let totalPages = 1;
+
+  function renderPagination() {
+    if (!paginationRoot) return;
+    paginationRoot.innerHTML = '';
+    if (totalPages <= 1) return;
+
+    const maxButtons = 7;
+    let start = Math.max(1, currentPage - Math.floor(maxButtons / 2));
+    let end = Math.min(totalPages, start + maxButtons - 1);
+    if (end - start + 1 < maxButtons) {
+      start = Math.max(1, end - maxButtons + 1);
+    }
+
+    for (let page = start; page <= end; page += 1) {
+      const className = page === currentPage ? 'btn btn-primary' : 'btn btn-secondary';
+      const button = window.ArchiviaUI.createActionButton(String(page), className, { 'data-page': String(page) });
+      button.addEventListener('click', function () {
+        if (page === currentPage) return;
+        load(page);
+      });
+      paginationRoot.appendChild(button);
+    }
+  }
 
   function draw() {
     const keyword = searchInput ? searchInput.value.trim().toLowerCase() : '';
@@ -37,10 +59,7 @@ document.addEventListener('DOMContentLoaded', async function () {
       'No activity logs found for this query.'
     );
 
-    const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
-    if (pageInfo) pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
-    if (prevBtn) prevBtn.disabled = currentPage <= 1;
-    if (nextBtn) nextBtn.disabled = currentPage >= totalPages;
+    renderPagination();
   }
 
   async function load(page) {
@@ -48,11 +67,19 @@ document.addEventListener('DOMContentLoaded', async function () {
     window.ArchiviaUI.showSkeleton('#logSummary', 3);
     try {
       currentPage = Math.max(1, Number(page) || 1);
-      all = await window.ArchiviaApi.withRetry(function () {
+      const payload = await window.ArchiviaApi.withRetry(function () {
         return window.ArchiviaApi.getLogs({ page: currentPage, limit: pageSize });
       }, 1);
-      totalItems = all.total || 0;
-      all = all.items || [];
+
+      if (Array.isArray(payload)) {
+        all = payload;
+        totalItems = payload.length;
+      } else {
+        all = Array.isArray(payload.items) ? payload.items : [];
+        totalItems = Number(payload.total) || all.length;
+      }
+      totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+
       const uniqueActors = {};
       all.forEach(function (item) { uniqueActors[item.actor] = true; });
       const latestDay = all.length ? all[0].time.split(' ')[0] : '';
@@ -68,18 +95,5 @@ document.addEventListener('DOMContentLoaded', async function () {
   }
 
   if (searchInput) searchInput.addEventListener('input', draw);
-  if (prevBtn) {
-    prevBtn.addEventListener('click', function () {
-      if (currentPage <= 1) return;
-      load(currentPage - 1);
-    });
-  }
-  if (nextBtn) {
-    nextBtn.addEventListener('click', function () {
-      const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
-      if (currentPage >= totalPages) return;
-      load(currentPage + 1);
-    });
-  }
   await load(1);
 });
