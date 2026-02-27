@@ -1,6 +1,17 @@
 (() => {
   const REQUEST_TIMEOUT_MS = Number(window.ARCHIVIA_API_TIMEOUT_MS) > 0 ? Number(window.ARCHIVIA_API_TIMEOUT_MS) : 10000;
-  const API_BASE = '/api';
+
+  function resolveApiBase() {
+    if (window.ARCHIVIA_API_BASE) return String(window.ARCHIVIA_API_BASE).trim();
+    const path = window.location.pathname || '';
+    const host = window.location.hostname || '';
+    const port = window.location.port || '';
+    if ((host === '127.0.0.1' || host === 'localhost') && port === '5500') return 'http://localhost/ARCHIVA/api';
+    if (path.toLowerCase().includes('/archiva/')) return '/ARCHIVA/api';
+    return '/api';
+  }
+
+  const API_BASE = resolveApiBase();
 
   function normalizeError(payload, fallbackStatus) {
     if (!payload || typeof payload !== 'object') {

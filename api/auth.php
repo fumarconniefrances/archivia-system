@@ -7,6 +7,20 @@ start_secure_session();
 
 $action = $_GET['action'] ?? '';
 
+function users_has_department_column($pdo) {
+  static $hasDepartment = null;
+  if ($hasDepartment !== null) {
+    return $hasDepartment;
+  }
+  try {
+    $stmt = $pdo->query("SHOW COLUMNS FROM users LIKE 'department'");
+    $hasDepartment = (bool)$stmt->fetch();
+  } catch (Exception $e) {
+    $hasDepartment = false;
+  }
+  return $hasDepartment;
+}
+
 if ($action === 'login' && $_SERVER['REQUEST_METHOD'] === 'POST') {
   $data = get_json_input();
   $login = trim((string)($data['email'] ?? $data['login'] ?? ''));
@@ -16,12 +30,13 @@ if ($action === 'login' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     error_response('Login and password are required.', 422);
   }
 
-  $stmt = $pdo->prepare('
-    SELECT id, name, email, password, role, status, department
+  $departmentSelect = users_has_department_column($pdo) ? 'department' : "'' AS department";
+  $stmt = $pdo->prepare("
+    SELECT id, name, email, password, role, status, {$departmentSelect}
     FROM users
     WHERE email = :login_email OR name = :login_name
     LIMIT 1
-  ');
+  ");
   $stmt->execute([
     ':login_email' => $login,
     ':login_name' => $login
@@ -68,7 +83,8 @@ if ($action === 'me' && $_SERVER['REQUEST_METHOD'] === 'GET') {
   if (empty($_SESSION['user_id'])) {
     error_response('Unauthorized', 401);
   }
-  $stmt = $pdo->prepare('SELECT id, name, email, role, department FROM users WHERE id = :id LIMIT 1');
+  $departmentSelect = users_has_department_column($pdo) ? 'department' : "'' AS department";
+  $stmt = $pdo->prepare("SELECT id, name, email, role, {$departmentSelect} FROM users WHERE id = :id LIMIT 1");
   $stmt->execute([':id' => $_SESSION['user_id']]);
   $user = $stmt->fetch();
   if (!$user) error_response('Unauthorized', 401);
