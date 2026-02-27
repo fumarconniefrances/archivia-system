@@ -9,15 +9,23 @@ $action = $_GET['action'] ?? '';
 
 if ($action === 'login' && $_SERVER['REQUEST_METHOD'] === 'POST') {
   $data = get_json_input();
-  $email = trim($data['email'] ?? '');
+  $login = trim((string)($data['email'] ?? $data['login'] ?? ''));
   $password = $data['password'] ?? '';
 
-  if ($email === '' || $password === '') {
-    error_response('Email and password are required.', 422);
+  if ($login === '' || $password === '') {
+    error_response('Login and password are required.', 422);
   }
 
-  $stmt = $pdo->prepare('SELECT id, name, email, password, role, status, department FROM users WHERE email = :email LIMIT 1');
-  $stmt->execute([':email' => $email]);
+  $stmt = $pdo->prepare('
+    SELECT id, name, email, password, role, status, department
+    FROM users
+    WHERE email = :login_email OR name = :login_name
+    LIMIT 1
+  ');
+  $stmt->execute([
+    ':login_email' => $login,
+    ':login_name' => $login
+  ]);
   $user = $stmt->fetch();
   if (!$user || $user['status'] !== 'ACTIVE' || !password_verify($password, $user['password'])) {
     error_response('Invalid credentials.', 401);
