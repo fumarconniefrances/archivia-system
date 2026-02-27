@@ -4,6 +4,7 @@ require_once __DIR__ . '/utils.php';
 require_once __DIR__ . '/middleware.php';
 
 start_secure_session();
+enforce_csrf_for_request();
 
 $method = $_SERVER['REQUEST_METHOD'];
 
@@ -25,6 +26,10 @@ if ($method === 'POST') {
   if ($name === '') $errors['name'] = 'name is required';
   if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) $errors['email'] = 'valid email is required';
   if ($password === '') $errors['password'] = 'password is required';
+  check_max_length('name', $name, 100, $errors);
+  check_max_length('email', $email, 150, $errors);
+  check_max_length('password', $password, 255, $errors);
+  check_max_length('department', $department, 100, $errors);
   if (!empty($errors)) validation_error_response($errors);
 
   $stmt = $pdo->prepare('SELECT id FROM users WHERE email = :email LIMIT 1');

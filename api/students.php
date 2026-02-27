@@ -4,6 +4,7 @@ require_once __DIR__ . '/utils.php';
 require_once __DIR__ . '/middleware.php';
 
 start_secure_session();
+enforce_csrf_for_request();
 
 $method = $_SERVER['REQUEST_METHOD'];
 
@@ -76,6 +77,11 @@ if ($method === 'POST') {
   if ($lastName === '') $errors['last_name'] = 'last_name is required';
   if (!in_array($sex, ['MALE', 'FEMALE'], true)) $errors['sex'] = 'sex must be MALE or FEMALE';
   if ($batchYear === false) $errors['batch_year'] = 'batch_year must be an integer';
+  check_max_length('student_id', $studentId, 50, $errors);
+  check_max_length('first_name', $firstName, 100, $errors);
+  check_max_length('last_name', $lastName, 100, $errors);
+  check_max_length('grade_level', isset($data['grade_level']) ? trim((string)$data['grade_level']) : null, 50, $errors);
+  check_max_length('section', isset($data['section']) ? trim((string)$data['section']) : null, 50, $errors);
   if (!empty($errors)) validation_error_response($errors);
 
   $pdo->beginTransaction();
@@ -137,6 +143,11 @@ if ($method === 'PUT') {
   if ($lastName === '') $errors['last_name'] = 'last_name is required';
   if (!in_array($sex, ['MALE', 'FEMALE'], true)) $errors['sex'] = 'sex must be MALE or FEMALE';
   if ($batchYear === false) $errors['batch_year'] = 'batch_year must be an integer';
+  check_max_length('student_id', $studentId, 50, $errors);
+  check_max_length('first_name', $firstName, 100, $errors);
+  check_max_length('last_name', $lastName, 100, $errors);
+  check_max_length('grade_level', isset($data['grade_level']) ? trim((string)$data['grade_level']) : null, 50, $errors);
+  check_max_length('section', isset($data['section']) ? trim((string)$data['section']) : null, 50, $errors);
   if (!empty($errors)) validation_error_response($errors);
 
   $pdo->beginTransaction();

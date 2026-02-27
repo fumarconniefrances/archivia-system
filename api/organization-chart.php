@@ -4,6 +4,7 @@ require_once __DIR__ . '/utils.php';
 require_once __DIR__ . '/middleware.php';
 
 start_secure_session();
+enforce_csrf_for_request();
 
 function ensure_org_chart_table($pdo) {
   $sql = '
@@ -65,6 +66,8 @@ if ($method === 'POST') {
   $errors = [];
   if ($name === '') $errors['name'] = 'name is required';
   if ($position === '') $errors['position_title'] = 'position_title is required';
+  check_max_length('name', $name, 120, $errors);
+  check_max_length('position_title', $position, 120, $errors);
   if (!empty($errors)) validation_error_response($errors);
 
   $stmt = $pdo->prepare('
@@ -100,6 +103,8 @@ if ($method === 'PUT') {
   $errors = [];
   if ($name === '') $errors['name'] = 'name is required';
   if ($position === '') $errors['position_title'] = 'position_title is required';
+  check_max_length('name', $name, 120, $errors);
+  check_max_length('position_title', $position, 120, $errors);
   if (!empty($errors)) validation_error_response($errors);
 
   $stmt = $pdo->prepare('SELECT * FROM organization_chart_members WHERE id = :id AND is_active = 1 LIMIT 1');

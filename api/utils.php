@@ -26,6 +26,13 @@ function sanitize_filename($name) {
   return trim($name, '_');
 }
 
+function check_max_length($field, $value, $max, &$errors) {
+  if ($value === null) return;
+  if (mb_strlen((string)$value) > (int)$max) {
+    $errors[$field] = $field . ' exceeds max length of ' . (int)$max;
+  }
+}
+
 function log_action($pdo, $userId, $action, $entityType, $entityId, $oldValue, $newValue) {
   $stmt = $pdo->prepare('
     INSERT INTO logs (user_id, action, entity_type, entity_id, old_value, new_value)

@@ -4,6 +4,7 @@ require_once __DIR__ . '/utils.php';
 require_once __DIR__ . '/middleware.php';
 
 start_secure_session();
+enforce_csrf_for_request(['POST']);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_GET['action'] ?? '') === 'track') {
   require_role(['ADMIN', 'RECORD_OFFICER']);

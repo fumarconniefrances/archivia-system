@@ -2,7 +2,7 @@
 // PDO configuration for MariaDB.
 $dbHost = getenv('ARCHIVIA_DB_HOST') ?: '127.0.0.1';
 $dbName = getenv('ARCHIVIA_DB_NAME') ?: 'archivia_db';
-$dbUser = getenv('ARCHIVIA_DB_USER') ?: 'root';
+$dbUser = getenv('ARCHIVIA_DB_USER') ?: 'archivia_app';
 $dbPass = getenv('ARCHIVIA_DB_PASS') ?: '';
 $backupDir = getenv('ARCHIVIA_BACKUP_DIR') ?: 'C:\\ARCHIVIA_BACKUPS';
 $uploadDir = realpath(__DIR__ . '/../storage/uploads');
@@ -12,6 +12,25 @@ ini_set('display_errors', '0');
 ini_set('display_startup_errors', '0');
 ini_set('log_errors', '1');
 ini_set('error_log', __DIR__ . '/../storage/logs/php_error.log');
+
+function is_https_request() {
+  if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') return true;
+  if (!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && strtolower((string)$_SERVER['HTTP_X_FORWARDED_PROTO']) === 'https') return true;
+  if (!empty($_SERVER['SERVER_PORT']) && (int)$_SERVER['SERVER_PORT'] === 443) return true;
+  return false;
+}
+
+function apply_security_headers() {
+  header('X-Content-Type-Options: nosniff');
+  header('X-Frame-Options: DENY');
+  header('Referrer-Policy: no-referrer');
+  header('Permissions-Policy: camera=(), microphone=(), geolocation=()');
+  if (is_https_request()) {
+    header('Strict-Transport-Security: max-age=31536000; includeSubDomains');
+  }
+}
+
+apply_security_headers();
 
 set_exception_handler(function ($e) {
   error_log($e);

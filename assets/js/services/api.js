@@ -12,6 +12,7 @@
   }
 
   const API_BASE = resolveApiBase();
+  let csrfToken = null;
 
   function normalizeError(payload, fallbackStatus) {
     if (!payload || typeof payload !== 'object') {
@@ -43,14 +44,35 @@
     const config = options || {};
     let body = config.body;
     const headers = Object.assign({}, config.headers || {});
+    const method = (config.method || 'GET').toUpperCase();
 
     if (body && !(body instanceof FormData)) {
       headers['content-type'] = 'application/json';
       body = JSON.stringify(body);
     }
 
+    if (method !== 'GET' && method !== 'HEAD' && method !== 'OPTIONS' && !config.skipCsrf) {
+      if (!csrfToken) {
+        const csrfResponse = await fetchWithTimeout(API_BASE + '/auth.php?action=csrf', {
+          method: 'GET',
+          credentials: 'include'
+        });
+        let csrfPayload;
+        try {
+          csrfPayload = await csrfResponse.json();
+        } catch (_error) {
+          throw new Error('Unable to initialize CSRF token');
+        }
+        if (!csrfResponse.ok || !csrfPayload.success || !csrfPayload.data || !csrfPayload.data.token) {
+          throw normalizeError(csrfPayload, csrfResponse.status);
+        }
+        csrfToken = csrfPayload.data.token;
+      }
+      headers['x-csrf-token'] = csrfToken;
+    }
+
     const response = await fetchWithTimeout(API_BASE + path, {
-      method: config.method || 'GET',
+      method,
       headers,
       body,
       credentials: 'include'
@@ -64,6 +86,7 @@
     }
 
     if (!response.ok || !data.success) {
+      if (response.status === 401 || response.status === 419) csrfToken = null;
       throw normalizeError(data, response.status);
     }
     if (config.returnEnvelope) return data;
@@ -173,10 +196,16 @@
 
   window.ArchiviaApi = {
     login(email, password) {
-      return http('/auth.php?action=login', { method: 'POST', body: { email, password } });
+      csrfToken = null;
+      return http('/auth.php?action=login', { method: 'POST', body: { email, password } }).then(result => {
+        csrfToken = null;
+        return result;
+      });
     },
     logout() {
-      return http('/auth.php?action=logout', { method: 'POST' });
+      return http('/auth.php?action=logout', { method: 'POST' }).finally(() => {
+        csrfToken = null;
+      });
     },
     me() {
       return http('/auth.php?action=me');

@@ -4,6 +4,7 @@ require_once __DIR__ . '/utils.php';
 require_once __DIR__ . '/middleware.php';
 
 start_secure_session();
+enforce_csrf_for_request(['PUT']);
 require_admin();
 
 function ensure_settings_table($pdo) {
@@ -64,6 +65,7 @@ if ($method === 'PUT') {
   if ($schoolName === '') $errors['school_name'] = 'school_name is required';
   if (!in_array($retention, ['5', '7', '10'], true)) $errors['data_retention_years'] = 'data_retention_years must be 5, 7, or 10';
   if (!in_array($logLevel, ['Detailed', 'Standard'], true)) $errors['audit_log_level'] = 'audit_log_level must be Detailed or Standard';
+  check_max_length('school_name', $schoolName, 150, $errors);
   if (!empty($errors)) validation_error_response($errors);
 
   $existing = load_settings_map($pdo);
