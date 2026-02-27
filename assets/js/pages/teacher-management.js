@@ -1,5 +1,6 @@
 document.addEventListener('DOMContentLoaded', async function () {
   var searchInput = document.getElementById('globalSearch');
+  if (searchInput) searchInput.value = '';
   var all = [];
   var selectedTeacherId = 0;
   var newTeacherBtn = document.getElementById('newTeacherBtn');

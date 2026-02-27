@@ -581,9 +581,24 @@
     });
   }
 
+  function trackPageActivity() {
+    if (!window.ArchiviaApi || typeof window.ArchiviaApi.trackActivity !== 'function') return;
+    if (!getRequiredRoles().length) return;
+    var page = window.location.pathname.split('/').pop() || 'unknown';
+    var title = document.title || page;
+    window.ArchiviaApi.trackActivity({
+      event: 'page_view',
+      page: page,
+      title: title
+    }).catch(function () {
+      // Activity tracking should never block page use.
+    });
+  }
+
   document.addEventListener('DOMContentLoaded', async function () {
     var canContinue = await guardRouteByRole();
     if (!canContinue) return;
+    trackPageActivity();
     injectPageLoader();
     bindModalDismiss();
     setupGlobalSearch();

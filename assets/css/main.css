@@ -439,6 +439,40 @@ textarea {
   min-width: 0;
 }
 
+.org-chart-grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+}
+
+.org-card {
+  display: grid;
+  justify-items: center;
+  text-align: center;
+  gap: 10px;
+}
+
+.org-card .person-avatar-lg,
+.org-card .no-photo-lg {
+  width: 92px;
+  height: 92px;
+}
+
+.org-name {
+  font-size: 1rem;
+  font-weight: 760;
+}
+
+.org-position {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  line-height: 1.35;
+}
+
+.org-editable {
+  cursor: pointer;
+}
+
 .metric {
   font-size: 1.9rem;
   font-weight: 800;

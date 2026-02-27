@@ -118,6 +118,16 @@
     };
   }
 
+  function mapOrgMember(item) {
+    return {
+      id: Number(item.id),
+      name: item.name || '',
+      positionTitle: item.position_title || item.positionTitle || '',
+      photoData: item.photo_data || item.photoData || '',
+      sortOrder: Number(item.sort_order || item.sortOrder) || 0
+    };
+  }
+
   async function withRetry(fn, retries) {
     const count = typeof retries === 'number' ? retries : 2;
     let lastError;
@@ -169,6 +179,21 @@
     },
     getLogs() {
       return http('/logs.php').then(items => items.map(mapLog));
+    },
+    trackActivity(payload) {
+      return http('/logs.php?action=track', { method: 'POST', body: payload || {} });
+    },
+    getOrganizationChart() {
+      return http('/organization-chart.php').then(items => items.map(mapOrgMember));
+    },
+    createOrganizationMember(payload) {
+      return http('/organization-chart.php', { method: 'POST', body: payload });
+    },
+    updateOrganizationMember(payload) {
+      return http('/organization-chart.php', { method: 'PUT', body: payload });
+    },
+    deleteOrganizationMember(id) {
+      return http(`/organization-chart.php?id=${encodeURIComponent(id)}`, { method: 'DELETE' });
     },
     withRetry
   };

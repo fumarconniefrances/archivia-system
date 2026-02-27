@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', function () {
     'students.html': true,
     'student-profile.html': true,
     'documents.html': true,
+    'organizational-chart.html': true,
     'teacher-management.html': true,
     'activity-logs.html': true,
     'settings.html': true

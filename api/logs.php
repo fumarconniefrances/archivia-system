@@ -5,6 +5,26 @@ require_once __DIR__ . '/middleware.php';
 
 start_secure_session();
 
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_GET['action'] ?? '') === 'track') {
+  require_role(['ADMIN', 'RECORD_OFFICER']);
+  $data = get_json_input();
+  $event = trim((string)($data['event'] ?? 'page_view'));
+  $page = trim((string)($data['page'] ?? ''));
+  $title = trim((string)($data['title'] ?? ''));
+
+  if ($event === '') $event = 'page_view';
+  if (strlen($event) > 60) $event = substr($event, 0, 60);
+  if (strlen($page) > 120) $page = substr($page, 0, 120);
+  if (strlen($title) > 200) $title = substr($title, 0, 200);
+
+  log_action($pdo, $_SESSION['user_id'], $event, 'PAGE', null, null, [
+    'page' => $page,
+    'title' => $title
+  ]);
+
+  json_response(['success' => true, 'data' => true], 201);
+}
+
 require_admin();
 
 [$page, $limit, $offset] = get_pagination_params(50, 200);

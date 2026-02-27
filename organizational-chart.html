@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: https:; style-src 'self'; script-src 'self'; connect-src 'self' http://127.0.0.1:4000; base-uri 'self'; form-action 'self'; frame-ancestors 'none'" />
+  <meta name="referrer" content="no-referrer" />
+  <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=()" />
+  <title>Organizational Chart | ARCHIVIA</title>
+  <link rel="stylesheet" href="assets/css/main.css" />
+  <link rel="icon" type="image/jpeg" href="assets/images/SPEDlogo.jpg" />
+</head>
+<body data-required-role="admin,teacher">
+  <div class="app-layout">
+    <aside class="sidebar">
+      <div class="brand">ARCHIVIA</div>
+      <nav class="nav">
+        <a class="nav-link" href="dashboard-admin.html" data-role="admin">Admin Dashboard</a>
+        <a class="nav-link" href="dashboard-teacher.html" data-role="teacher">Teacher Dashboard</a>
+        <a class="nav-link" href="students.html">Students</a>
+        <a class="nav-link" href="documents.html">Document Archive</a>
+        <a class="nav-link active" href="organizational-chart.html">Organizational Chart</a>
+        <a class="nav-link" href="teacher-management.html" data-role="admin">Teacher Management</a>
+        <a class="nav-link" href="activity-logs.html">Activity Logs</a>
+        <a class="nav-link" href="settings.html" data-role="admin">Settings</a>
+      </nav>
+      <div class="sidebar-actions">
+        <button class="btn btn-secondary btn-sidebar-logout" type="button" data-logout>Log Out</button>
+      </div>
+    </aside>
+    <div class="main">
+      <header class="topbar">
+        <div class="search-wrap">
+          <input id="globalSearch" class="input" placeholder="Search by name or position" />
+        </div>
+        <span class="muted">School Leadership Structure</span>
+      </header>
+      <main class="content">
+        <section class="page-head">
+          <div>
+            <h1 class="page-title">Organizational Chart</h1>
+            <p class="page-meta">Profile picture, name, and school position.</p>
+          </div>
+          <div class="toolbar">
+            <button class="btn btn-primary" type="button" id="addOrgMemberBtn" data-role="admin">Add Member</button>
+          </div>
+        </section>
+        <section id="orgChartSummary" class="grid-cards"></section>
+        <section class="org-chart-grid" id="orgChartGrid"></section>
+        <footer class="muted footer-credit">Developed by FumarDev - ARCHIVIA System</footer>
+      </main>
+    </div>
+  </div>
+
+  <div class="modal" id="orgMemberModal" role="dialog" aria-modal="true" aria-labelledby="orgMemberTitle">
+    <div class="modal-card">
+      <div class="modal-head"><h3 id="orgMemberTitle">Organizational Chart Member</h3></div>
+      <div class="modal-body form-grid">
+        <div class="form-field">
+          <label class="label" for="orgName">Name</label>
+          <input class="input" id="orgName" required />
+        </div>
+        <div class="form-field">
+          <label class="label" for="orgPosition">Position</label>
+          <input class="input" id="orgPosition" required />
+        </div>
+        <div class="form-field">
+          <label class="label" for="orgSortOrder">Display Order</label>
+          <input class="input" id="orgSortOrder" type="number" value="0" />
+        </div>
+        <div class="form-field">
+          <label class="label" for="orgPhotoInput">Profile Picture</label>
+          <input class="input" id="orgPhotoInput" type="file" accept="image/*" />
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-danger hidden" id="deleteOrgMemberBtn" type="button">Delete</button>
+        <button class="btn btn-secondary" data-modal-close="#orgMemberModal">Cancel</button>
+        <button class="btn btn-primary" id="saveOrgMemberBtn" type="button">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toastStack" class="toast-stack" aria-live="polite"></div>
+  <script src="assets/js/services/api.js"></script>
+  <script src="assets/js/app.js"></script>
+  <script src="assets/js/pages/organizational-chart.js"></script>
+</body>
+</html>
