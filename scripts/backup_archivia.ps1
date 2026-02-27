@@ -7,6 +7,8 @@ param(
   [string]$ExternalDir = "D:\\ARCHIVIA_BACKUPS",
   [string]$ExternalDriveLabel = "My Passport",
   [string]$LogFile = "C:\\ARCHIVIA_BACKUPS\\backup_log.txt",
+  [int]$WindowStartHour = 8,
+  [int]$WindowEndHour = 17,
   [switch]$ZipWeekly
 )
 
@@ -60,11 +62,44 @@ function Test-ExternalBackupTarget {
   return @{ IsValid = $true; Reason = "External drive verified: $driveRoot ($ExpectedLabel)" }
 }
 
+function Is-WithinRunWindow {
+  param(
+    [int]$StartHour,
+    [int]$EndHour
+  )
+
+  if ($StartHour -lt 0 -or $StartHour -gt 23 -or $EndHour -lt 0 -or $EndHour -gt 23) {
+    return @{ IsValid = $false; Reason = "Invalid run window hours. Use 0-23." }
+  }
+  if ($StartHour -gt $EndHour) {
+    return @{ IsValid = $false; Reason = "WindowStartHour cannot be greater than WindowEndHour." }
+  }
+
+  $nowHour = (Get-Date).Hour
+  $within = ($nowHour -ge $StartHour -and $nowHour -le $EndHour)
+  return @{
+    IsValid = $true
+    InWindow = $within
+    Reason = "Current hour $nowHour outside allowed window ${StartHour}:00-${EndHour}:00."
+  }
+}
+
 if (-not (Test-Path -LiteralPath $LocalDir)) {
   New-Item -ItemType Directory -Force -Path $LocalDir | Out-Null
 }
 if (-not (Test-Path -LiteralPath (Split-Path -Path $LogFile -Parent))) {
   New-Item -ItemType Directory -Force -Path (Split-Path -Path $LogFile -Parent) | Out-Null
+}
+
+$windowCheck = Is-WithinRunWindow -StartHour $WindowStartHour -EndHour $WindowEndHour
+if (-not $windowCheck.IsValid) {
+  Write-BackupLog ("Backup window config FAILED: {0}" -f $windowCheck.Reason)
+  Write-Error $windowCheck.Reason
+  exit 1
+}
+if (-not $windowCheck.InWindow) {
+  Write-BackupLog ("Backup skipped: {0}" -f $windowCheck.Reason)
+  exit 0
 }
 
 $timestamp = Get-Date -Format "yyyyMMdd_HHmmss"

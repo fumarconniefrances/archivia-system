@@ -220,6 +220,18 @@
     trackActivity(payload) {
       return http('/logs.php?action=track', { method: 'POST', body: payload || {} });
     },
+    getSettings() {
+      return http('/settings.php');
+    },
+    saveSettings(payload) {
+      return http('/settings.php', { method: 'PUT', body: payload });
+    },
+    getSystemHealth() {
+      return http('/system/health.php', { returnEnvelope: true }).then(payload => ({
+        healthy: Boolean(payload.healthy),
+        checks: payload.checks || {}
+      }));
+    },
     getOrganizationChart() {
       return http('/organization-chart.php').then(items => items.map(mapOrgMember));
     },

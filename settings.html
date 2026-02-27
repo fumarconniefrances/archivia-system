@@ -43,14 +43,14 @@
         <section class="grid-cards" id="settingsSummary">
           <article class="card">
             <h2>Security Status</h2>
-            <div class="form-grid table-top-gap">
+            <div class="form-grid table-top-gap" id="securityStatus">
               <div class="detail-item">Role-based access control: Enabled</div>
               <div class="detail-item">Daily audit capture: Enabled</div>
             </div>
           </article>
           <article class="card">
             <h2>Data Safety</h2>
-            <div class="form-grid table-top-gap">
+            <div class="form-grid table-top-gap" id="dataSafety">
               <div class="detail-item">Automatic backup: Scheduled</div>
               <div class="detail-item">Archive integrity check: Active</div>
             </div>
@@ -58,8 +58,8 @@
         </section>
         <section class="card form-grid">
           <div class="form-field"><label class="label" for="schoolName">School Name</label><input class="input" id="schoolName" value="Archivia Integrated School" /></div>
-          <div class="form-field"><label class="label" for="retention">Data Retention Policy</label><select class="select" id="retention"><option>5 Years</option><option>7 Years</option><option>10 Years</option></select></div>
-          <div class="form-field"><label class="label" for="logLevel">Audit Log Level</label><select class="select" id="logLevel"><option>Detailed</option><option>Standard</option></select></div>
+          <div class="form-field"><label class="label" for="retention">Data Retention Policy</label><select class="select" id="retention"><option value="5">5 Years</option><option value="7">7 Years</option><option value="10">10 Years</option></select></div>
+          <div class="form-field"><label class="label" for="logLevel">Audit Log Level</label><select class="select" id="logLevel"><option value="Detailed">Detailed</option><option value="Standard">Standard</option></select></div>
           <div class="toolbar">
             <button class="btn btn-primary" id="saveSettingsBtn">Save Settings</button>
           </div>
