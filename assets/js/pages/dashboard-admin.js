@@ -4,6 +4,7 @@ document.addEventListener('DOMContentLoaded', async function () {
   var searchInput = document.getElementById('globalSearch');
   var allStudents = [];
   var allDocs = [];
+  var allLogs = [];
 
   if (addStudentBtn) {
     addStudentBtn.addEventListener('click', function () {
@@ -52,15 +53,28 @@ document.addEventListener('DOMContentLoaded', async function () {
     });
   }
 
-  function renderDashboard(students, docs) {
+  function getTodaysActivityCount(logs) {
+    var today = new Date();
+    var y = today.getFullYear();
+    var m = String(today.getMonth() + 1).padStart(2, '0');
+    var d = String(today.getDate()).padStart(2, '0');
+    var todayKey = y + '-' + m + '-' + d;
+    return logs.filter(function (entry) {
+      return String(entry.time || '').indexOf(todayKey) === 0;
+    }).length;
+  }
+
+  function renderDashboard(students, docs, logs) {
     var studentsSorted = students.slice().sort(function (a, b) {
       return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     });
+    var todayActivityCount = getTodaysActivityCount(logs || []);
 
       window.ArchiviaUI.renderMetricCards('#adminMetrics', [
         { title: 'Total SPED Students', value: students.length, hint: 'Current enrolled profiles' },
         { title: 'School Years', value: Array.from(new Set(students.map(getStudentYear).filter(function (y) { return y >= 1988; }))).length, hint: 'Available batch years' },
-        { title: 'Documents Stored', value: docs.length, hint: 'Files linked to student profiles' }
+        { title: 'Documents Stored', value: docs.length, hint: 'Files linked to student profiles' },
+        { title: "Today's Activity", value: todayActivityCount, hint: 'Audit events recorded today' }
       ]);
 
     window.ArchiviaUI.renderRows('#adminRecentBody', studentsSorted, [
@@ -93,7 +107,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     var query = searchInput ? searchInput.value : '';
     var filteredStudents = filterStudents(allStudents, query);
     var filteredDocs = filterDocsByStudents(allDocs, filteredStudents);
-    renderDashboard(filteredStudents, filteredDocs);
+    renderDashboard(filteredStudents, filteredDocs, allLogs);
   }
 
   async function load() {
@@ -105,6 +119,14 @@ document.addEventListener('DOMContentLoaded', async function () {
       allDocs = await window.ArchiviaApi.withRetry(function () {
         return window.ArchiviaApi.getDocuments();
       }, 1);
+      try {
+        var logsPayload = await window.ArchiviaApi.withRetry(function () {
+          return window.ArchiviaApi.getLogs({ page: 1, limit: 200 });
+        }, 1);
+        allLogs = Array.isArray(logsPayload && logsPayload.items) ? logsPayload.items : [];
+      } catch (_logsError) {
+        allLogs = [];
+      }
       applySearch();
 
       var compliance = [
