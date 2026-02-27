@@ -66,6 +66,7 @@
     if (!response.ok || !data.success) {
       throw normalizeError(data, response.status);
     }
+    if (config.returnEnvelope) return data;
     return data.data;
   }
 
@@ -108,16 +109,34 @@
   }
 
   function mapLog(item) {
+    function prettifyPageName(value) {
+      const raw = String(value || '').trim();
+      if (!raw) return '';
+      if (/^\d+$/.test(raw)) return raw;
+
+      let text = raw.split('|')[0].trim();
+      text = text.split('?')[0].split('#')[0];
+      if (text.includes('/')) {
+        const chunks = text.split('/');
+        text = chunks[chunks.length - 1];
+      }
+      text = text.replace(/\.html$/i, '');
+      text = text.replace(/[-_]+/g, ' ').trim();
+      if (!text) return '';
+      return text.replace(/\b\w/g, ch => ch.toUpperCase());
+    }
+
     let target = item.entity_id || item.entityId || '';
     if (!target && item.new_value) {
       try {
         const detail = typeof item.new_value === 'string' ? JSON.parse(item.new_value) : item.new_value;
-        target = detail && (detail.page || detail.title || detail.entity_id || detail.target) || '';
+        target = detail && (detail.page || detail.target || detail.title || detail.entity_id) || '';
       } catch (_error) {
         target = '';
       }
     }
     if (!target) target = item.entity_type || item.entityType || '-';
+    target = prettifyPageName(target) || target;
 
     return {
       time: item.created_at || item.createdAt || item.time || '',
@@ -188,8 +207,15 @@
     addTeacher(payload) {
       return http('/teachers.php', { method: 'POST', body: payload });
     },
-    getLogs() {
-      return http('/logs.php').then(items => items.map(mapLog));
+    getLogs(params) {
+      const query = params ? new URLSearchParams(params).toString() : '';
+      return http('/logs.php' + (query ? `?${query}` : ''), { returnEnvelope: true })
+        .then(payload => ({
+          items: (payload.data || []).map(mapLog),
+          page: Number(payload.page) || 1,
+          limit: Number(payload.limit) || 50,
+          total: Number(payload.total) || 0
+        }));
     },
     trackActivity(payload) {
       return http('/logs.php?action=track', { method: 'POST', body: payload || {} });
