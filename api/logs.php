@@ -33,7 +33,7 @@ $countStmt->execute();
 $total = (int)($countStmt->fetch()['total'] ?? 0);
 
 $stmt = $pdo->prepare('
-  SELECT l.id, l.user_id, l.action, l.entity_type, l.entity_id, l.created_at, u.name AS user_name
+  SELECT l.id, l.user_id, l.action, l.entity_type, l.entity_id, l.new_value, l.created_at, u.name AS user_name
   FROM logs l
   LEFT JOIN users u ON u.id = l.user_id
   ORDER BY l.created_at DESC

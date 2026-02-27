@@ -108,12 +108,23 @@
   }
 
   function mapLog(item) {
+    let target = item.entity_id || item.entityId || '';
+    if (!target && item.new_value) {
+      try {
+        const detail = typeof item.new_value === 'string' ? JSON.parse(item.new_value) : item.new_value;
+        target = detail && (detail.page || detail.title || detail.entity_id || detail.target) || '';
+      } catch (_error) {
+        target = '';
+      }
+    }
+    if (!target) target = item.entity_type || item.entityType || '-';
+
     return {
       time: item.created_at || item.createdAt || item.time || '',
       actor: item.user_name || item.userName || item.name || 'System',
       userName: item.user_name || item.userName || item.name || 'System',
       action: item.action || 'N/A',
-      target: item.entity_id || item.entityId || item.entityType || '-',
+      target,
       entityType: item.entity_type || item.entityType || 'UNKNOWN'
     };
   }
