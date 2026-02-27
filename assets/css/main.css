@@ -503,6 +503,17 @@ textarea {
   align-items: center;
 }
 
+.logs-pagination {
+  background: transparent;
+}
+
+.logs-pagination a,
+.logs-pagination strong {
+  color: rgba(74, 144, 226, 0.75);
+  background: transparent;
+}
+
+
 .dashboard-state h2 {
   font-size: 1.02rem;
 }

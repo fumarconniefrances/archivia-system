@@ -20,13 +20,25 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
 
     for (let page = start; page <= end; page += 1) {
-      const className = page === currentPage ? 'btn btn-primary' : 'btn btn-secondary';
-      const button = window.ArchiviaUI.createActionButton(String(page), className, { 'data-page': String(page) });
-      button.addEventListener('click', function () {
-        if (page === currentPage) return;
-        load(page);
-      });
-      paginationRoot.appendChild(button);
+      if (page === currentPage) {
+        const current = document.createElement('strong');
+        current.textContent = String(page);
+        paginationRoot.appendChild(current);
+      } else {
+        const link = document.createElement('a');
+        link.href = '#';
+        link.textContent = String(page);
+        link.setAttribute('data-page', String(page));
+        link.addEventListener('click', function (event) {
+          event.preventDefault();
+          load(page);
+        });
+        paginationRoot.appendChild(link);
+      }
+
+      if (page < end) {
+        paginationRoot.appendChild(document.createTextNode(' '));
+      }
     }
   }
 
