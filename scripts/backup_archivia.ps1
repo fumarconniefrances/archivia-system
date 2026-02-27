@@ -1,10 +1,10 @@
 param(
   [string]$MysqlDump = "C:\\xampp\\mysql\\bin\\mysqldump.exe",
   [string]$DbName = "archivia_db",
-  [string]$User = "archivia_user",
-  [string]$Password = "your_password",
+  [string]$User = "root",
+  [string]$Password = "",
   [string]$LocalDir = "C:\\ARCHIVIA_BACKUPS\\LOCAL",
-  [string]$ExternalDir = "E:\\ARCHIVIA_BACKUPS",
+  [string]$ExternalDir = "D:\\ARCHIVIA_BACKUPS",
   [string]$LogFile = "C:\\ARCHIVIA_BACKUPS\\backup_log.txt",
   [switch]$ZipWeekly
 )

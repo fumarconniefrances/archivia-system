@@ -2,4 +2,6 @@
 node_modules/
 storage/uploads/*
 !storage/uploads/.gitkeep
-
+storage/logs/
+*_login.json
+*_cookies.txt
