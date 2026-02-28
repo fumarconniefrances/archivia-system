@@ -133,8 +133,11 @@ if ($method === 'POST') {
     $id = (int)$pdo->lastInsertId();
 
     if ($adviserId <= 0 && $adviserName !== '') {
-      $stmt = $pdo->prepare('SELECT id FROM users WHERE role = "RECORD_OFFICER" AND status = "ACTIVE" AND (LOWER(name) = LOWER(:name) OR LOWER(email) = LOWER(:name)) LIMIT 1');
-      $stmt->execute([':name' => $adviserName]);
+      $stmt = $pdo->prepare('SELECT id FROM users WHERE role = "RECORD_OFFICER" AND status = "ACTIVE" AND (LOWER(name) = LOWER(:name1) OR LOWER(email) = LOWER(:name2)) LIMIT 1');
+      $stmt->execute([
+        ':name1' => $adviserName,
+        ':name2' => $adviserName
+      ]);
       $matched = $stmt->fetch();
       if (!$matched) {
         $pdo->rollBack();
