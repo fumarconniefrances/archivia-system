@@ -189,13 +189,15 @@ CREATE TABLE `system_settings` (
 
 --
 -- Seed credentials (change passwords immediately after first login)
--- ADMIN: admin@archivia.local / Admin@123
--- RECORD_OFFICER: officer@archivia.local / Officer@123
+-- ADMIN: daylinda.lim@deped.gov.ph / Dayline_191604
+-- ADMIN (name login): DAYLINDA E. LIM / Dayline_191604
+-- RECORD_OFFICER: cindy.catindoy@deped.gov.ph / sped124260
+-- RECORD_OFFICER (name login): ccatindoy / sped124260
 --
 
 INSERT INTO `users` (`id`, `name`, `email`, `password`, `role`, `status`, `department`, `last_login_at`, `created_at`, `updated_at`) VALUES
-(1, 'System Administrator', 'admin@archivia.local', '$2y$10$TbvxWxgMRhn1BOdViknceOlNnp4VFb04/sj5m.2X.rJ97hkiVDb4m', 'ADMIN', 'ACTIVE', 'Administration', NULL, current_timestamp(), current_timestamp()),
-(2, 'Records Officer', 'officer@archivia.local', '$2y$10$X7dpg39CBnpSMuH8SKtbke1pilLtEYtxk1wrXyl1qUtkD.XKLVsMe', 'RECORD_OFFICER', 'ACTIVE', 'Records', NULL, current_timestamp(), current_timestamp());
+(1, 'DAYLINDA E. LIM', 'daylinda.lim@deped.gov.ph', '$2y$10$SJY4F5XjVeqKAxgUGSvPG.m5y/23v.N0ov1azk7ycCQHF4/wtJ.Pm', 'ADMIN', 'ACTIVE', 'Administration', NULL, current_timestamp(), current_timestamp()),
+(2, 'ccatindoy', 'cindy.catindoy@deped.gov.ph', '$2y$10$R1r87017eshbrMM4tLkniubx/ySx8g0GLtoTTTLfVhf.dSM9LTpei', 'RECORD_OFFICER', 'ACTIVE', 'SPED', NULL, current_timestamp(), current_timestamp());
 
 --
 -- Indexes for dumped tables
