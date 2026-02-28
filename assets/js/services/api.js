@@ -233,6 +233,9 @@
     getDocumentDownloadUrl(id) {
       return API_BASE + '/documents.php?action=download&id=' + encodeURIComponent(id);
     },
+    getDocumentPreviewUrl(id) {
+      return API_BASE + '/documents.php?action=preview&id=' + encodeURIComponent(id);
+    },
     getDocumentExportPdfUrl(id) {
       return API_BASE + '/documents.php?action=export_pdf&id=' + encodeURIComponent(id);
     },

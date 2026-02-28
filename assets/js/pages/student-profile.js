@@ -4,11 +4,11 @@ document.addEventListener('DOMContentLoaded', async function () {
   var currentRole = window.ArchiviaUI.getCurrentRole ? window.ArchiviaUI.getCurrentRole() : '';
   var activeDoc = null;
 
-  function getDocDownloadUrl(docId) {
-    if (window.ArchiviaApi && typeof window.ArchiviaApi.getDocumentDownloadUrl === 'function') {
-      return window.ArchiviaApi.getDocumentDownloadUrl(docId);
+  function getDocPreviewUrl(docId) {
+    if (window.ArchiviaApi && typeof window.ArchiviaApi.getDocumentPreviewUrl === 'function') {
+      return window.ArchiviaApi.getDocumentPreviewUrl(docId);
     }
-    return 'api/documents.php?action=download&id=' + encodeURIComponent(docId);
+    return 'api/documents.php?action=preview&id=' + encodeURIComponent(docId);
   }
 
   function getDocExportPdfUrl(docId) {
@@ -132,7 +132,7 @@ document.addEventListener('DOMContentLoaded', async function () {
           var target = document.getElementById('profileViewerDocName');
           if (target) target.textContent = label;
           if (previewFrame) {
-            previewFrame.src = activeDoc ? getDocDownloadUrl(activeDoc.id) : 'about:blank';
+            previewFrame.src = activeDoc ? getDocPreviewUrl(activeDoc.id) : 'about:blank';
           }
           window.ArchiviaUI.openModal('#profileDocViewerModal');
         });

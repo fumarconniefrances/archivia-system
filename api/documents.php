@@ -250,18 +250,53 @@ function build_pdf_from_jpeg_pages($pages) {
   return $pdf;
 }
 
-if ($method === 'GET' && ($_GET['action'] ?? '') === 'download') {
+function build_document_pdf_binary($doc, $real) {
+  if ($doc['mime_type'] === 'application/pdf') {
+    $bin = @file_get_contents($real);
+    return $bin === false ? null : $bin;
+  }
+
+  if (in_array($doc['mime_type'], ['image/jpeg', 'image/png', 'image/webp'], true)) {
+    $img = image_to_jpeg_data($real, $doc['mime_type']);
+    if (!$img) return null;
+    return build_pdf_from_jpeg_pages([$img]);
+  }
+
+  $originalExt = strtolower((string)pathinfo((string)$doc['original_name'], PATHINFO_EXTENSION));
+  if ($doc['mime_type'] === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || $originalExt === 'docx') {
+    $pages = extract_docx_images_as_jpegs($real);
+    if (!count($pages)) return null;
+    return build_pdf_from_jpeg_pages($pages);
+  }
+
+  return null;
+}
+
+if ($method === 'GET' && ($_GET['action'] ?? '') === 'preview') {
   require_record_officer();
   $id = (int)($_GET['id'] ?? 0);
   if ($id <= 0) error_response('Invalid document id.', 422);
 
-  $stmt = $pdo->prepare('SELECT id, original_name, stored_name, file_path, mime_type, file_size
+  $stmt = $pdo->prepare('SELECT id, original_name, stored_name, file_path, mime_type
                          FROM documents WHERE id = :id AND deleted_at IS NULL LIMIT 1');
   $stmt->execute([':id' => $id]);
   $doc = $stmt->fetch();
   if (!$doc) error_response('Document not found.', 404);
 
   $real = resolve_document_file_path($doc);
+  if ($doc['mime_type'] === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || strtolower((string)pathinfo((string)$doc['original_name'], PATHINFO_EXTENSION)) === 'docx') {
+    $pdf = build_document_pdf_binary($doc, $real);
+    if ($pdf === null) error_response('Preview failed.', 422);
+    $nameBase = pathinfo((string)$doc['original_name'], PATHINFO_FILENAME);
+    if ($nameBase === '') $nameBase = 'document_' . $id;
+    $previewName = sanitize_filename($nameBase) . '.pdf';
+    header('Content-Type: application/pdf');
+    header('Content-Length: ' . strlen($pdf));
+    header('Content-Disposition: inline; filename="' . $previewName . '"');
+    echo $pdf;
+    exit;
+  }
+
   header('Content-Type: ' . $doc['mime_type']);
   header('Content-Length: ' . filesize($real));
   header('Content-Disposition: inline; filename="' . basename($doc['original_name']) . '"');
@@ -285,43 +320,15 @@ if ($method === 'GET' && ($_GET['action'] ?? '') === 'export_pdf') {
   if ($baseName === '') $baseName = 'document_' . $id;
   $exportName = sanitize_filename($baseName) . '.pdf';
 
-  if ($doc['mime_type'] === 'application/pdf') {
-    header('Content-Type: application/pdf');
-    header('Content-Length: ' . filesize($real));
-    header('Content-Disposition: attachment; filename="' . $exportName . '"');
-    readfile($real);
-    exit;
+  $pdf = build_document_pdf_binary($doc, $real);
+  if ($pdf === null) {
+    error_response('PDF export failed.', 422);
   }
-
-  if (in_array($doc['mime_type'], ['image/jpeg', 'image/png', 'image/webp'], true)) {
-    $img = image_to_jpeg_data($real, $doc['mime_type']);
-    if (!$img) {
-      error_response('PDF export failed.', 500);
-    }
-    $pdf = build_pdf_from_jpeg_pages([$img]);
-    if ($pdf === null) error_response('PDF export failed.', 500);
-    header('Content-Type: application/pdf');
-    header('Content-Length: ' . strlen($pdf));
-    header('Content-Disposition: attachment; filename="' . $exportName . '"');
-    echo $pdf;
-    exit;
-  }
-
-  if ($doc['mime_type'] === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || pathinfo((string)$doc['original_name'], PATHINFO_EXTENSION) === 'docx') {
-    $pages = extract_docx_images_as_jpegs($real);
-    if (!count($pages)) {
-      error_response('PDF export failed.', 422);
-    }
-    $pdf = build_pdf_from_jpeg_pages($pages);
-    if ($pdf === null) error_response('PDF export failed.', 500);
-    header('Content-Type: application/pdf');
-    header('Content-Length: ' . strlen($pdf));
-    header('Content-Disposition: attachment; filename="' . $exportName . '"');
-    echo $pdf;
-    exit;
-  }
-
-  error_response('Unsupported export format.', 422);
+  header('Content-Type: application/pdf');
+  header('Content-Length: ' . strlen($pdf));
+  header('Content-Disposition: attachment; filename="' . $exportName . '"');
+  echo $pdf;
+  exit;
 }
 
 if ($method === 'GET') {
