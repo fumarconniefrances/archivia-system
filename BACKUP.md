@@ -42,7 +42,7 @@ Check log:
 ## Restore Validation
 
 1. Restore:
-   `C:\xampp\mysql\bin\mysql.exe -u archivia_user -p archivia_test_restore < C:\ARCHIVIA_BACKUPS\LOCAL\archivia_backup_YYYYMMDD_HHMMSS.sql`
+   `C:\xampp\mysql\bin\mysql.exe -u archivia_user -p archivia_db < C:\ARCHIVIA_BACKUPS\LOCAL\archivia_backup_YYYYMMDD_HHMMSS.sql`
 2. Validate row counts and critical tables.
 
 ## Weekly Compression (Optional)
