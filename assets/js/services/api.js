@@ -233,6 +233,9 @@
     getDocumentDownloadUrl(id) {
       return API_BASE + '/documents.php?action=download&id=' + encodeURIComponent(id);
     },
+    getDocumentExportPdfUrl(id) {
+      return API_BASE + '/documents.php?action=export_pdf&id=' + encodeURIComponent(id);
+    },
     getTeachers() {
       return http('/teachers.php').then(items => items.map(mapUser));
     },

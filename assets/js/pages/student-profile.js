@@ -11,6 +11,13 @@ document.addEventListener('DOMContentLoaded', async function () {
     return 'api/documents.php?action=download&id=' + encodeURIComponent(docId);
   }
 
+  function getDocExportPdfUrl(docId) {
+    if (window.ArchiviaApi && typeof window.ArchiviaApi.getDocumentExportPdfUrl === 'function') {
+      return window.ArchiviaApi.getDocumentExportPdfUrl(docId);
+    }
+    return 'api/documents.php?action=export_pdf&id=' + encodeURIComponent(docId);
+  }
+
   function renderProfileCard(student) {
     var profileCard = document.getElementById('profileCard');
     profileCard.innerHTML = '';
@@ -147,7 +154,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             window.ArchiviaUI.showToast('Select a document preview first.');
             return;
           }
-          window.open(getDocDownloadUrl(activeDoc.id), '_blank', 'noopener');
+          window.open(getDocExportPdfUrl(activeDoc.id), '_blank', 'noopener');
         };
       }
 
