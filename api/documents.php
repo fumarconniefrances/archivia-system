@@ -272,6 +272,16 @@ function build_document_pdf_binary($doc, $real) {
   return null;
 }
 
+function apply_preview_embed_headers() {
+  // Override API defaults so same-origin iframe preview is allowed.
+  if (function_exists('header_remove')) {
+    header_remove('X-Frame-Options');
+    header_remove('Content-Security-Policy');
+  }
+  header("Content-Security-Policy: default-src 'self'; img-src 'self' data: blob: https:; style-src 'self' 'unsafe-inline'; script-src 'none'; frame-ancestors 'self'; base-uri 'self'");
+  header('X-Frame-Options: SAMEORIGIN');
+}
+
 if ($method === 'GET' && ($_GET['action'] ?? '') === 'preview') {
   require_record_officer();
   $id = (int)($_GET['id'] ?? 0);
@@ -284,6 +294,7 @@ if ($method === 'GET' && ($_GET['action'] ?? '') === 'preview') {
   if (!$doc) error_response('Document not found.', 404);
 
   $real = resolve_document_file_path($doc);
+  apply_preview_embed_headers();
   if ($doc['mime_type'] === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || strtolower((string)pathinfo((string)$doc['original_name'], PATHINFO_EXTENSION)) === 'docx') {
     $pdf = build_document_pdf_binary($doc, $real);
     if ($pdf === null) error_response('Preview failed.', 422);

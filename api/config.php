@@ -21,9 +21,19 @@ function is_https_request() {
 }
 
 function apply_security_headers() {
-  header("Content-Security-Policy: default-src 'self'; img-src 'self' data: https:; style-src 'self'; script-src 'self'; connect-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'");
+  $script = strtolower((string)($_SERVER['SCRIPT_NAME'] ?? ''));
+  $action = strtolower((string)($_GET['action'] ?? ''));
+  $isDocumentPreview = (substr($script, -13) === '/documents.php' || substr($script, -13) === '\\documents.php') && $action === 'preview';
+
+  if ($isDocumentPreview) {
+    header("Content-Security-Policy: default-src 'self'; img-src 'self' data: blob: https:; style-src 'self' 'unsafe-inline'; script-src 'none'; connect-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'");
+    header('X-Frame-Options: SAMEORIGIN');
+  } else {
+    header("Content-Security-Policy: default-src 'self'; img-src 'self' data: https:; style-src 'self'; script-src 'self'; connect-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'");
+    header('X-Frame-Options: DENY');
+  }
+
   header('X-Content-Type-Options: nosniff');
-  header('X-Frame-Options: DENY');
   header('Referrer-Policy: no-referrer');
   header('Permissions-Policy: camera=(), microphone=(), geolocation=()');
   if (is_https_request()) {
