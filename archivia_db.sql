@@ -1,101 +1,166 @@
--- phpMyAdmin SQL Dump
--- version 5.2.1
--- https://www.phpmyadmin.net/
+-- MariaDB dump 10.19  Distrib 10.4.32-MariaDB, for Win64 (AMD64)
 --
--- Host: 127.0.0.1
--- Generation Time: Feb 24, 2026 at 07:38 PM
--- Server version: 10.4.32-MariaDB
--- PHP Version: 8.2.12
-
-SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
-START TRANSACTION;
-SET time_zone = "+00:00";
-
+-- Host: localhost    Database: archivia_db
+-- ------------------------------------------------------
+-- Server version	10.4.32-MariaDB
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
 /*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
 /*!40101 SET NAMES utf8mb4 */;
-
---
--- Database: `archivia_db`
---
-
--- --------------------------------------------------------
-
---
--- Table structure for table `documents`
---
-
-CREATE TABLE `documents` (
-  `id` int(10) UNSIGNED NOT NULL,
-  `student_id` int(10) UNSIGNED NOT NULL,
-  `document_group_id` int(10) UNSIGNED NOT NULL,
-  `original_name` varchar(255) NOT NULL,
-  `stored_name` varchar(255) NOT NULL,
-  `file_path` varchar(255) NOT NULL,
-  `mime_type` varchar(100) NOT NULL,
-  `file_size` int(10) UNSIGNED NOT NULL,
-  `version_number` int(10) UNSIGNED NOT NULL DEFAULT 1,
-  `is_current` tinyint(1) NOT NULL DEFAULT 1,
-  `uploaded_by` int(10) UNSIGNED DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `deleted_at` datetime DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- --------------------------------------------------------
+/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
+/*!40103 SET TIME_ZONE='+00:00' */;
+/*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
+/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
+/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
+/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
 -- Table structure for table `document_groups`
 --
 
+DROP TABLE IF EXISTS `document_groups`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `document_groups` (
-  `id` int(10) UNSIGNED NOT NULL,
-  `student_id` int(10) UNSIGNED NOT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `student_id` int(10) unsigned NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `idx_document_groups_student_id` (`student_id`),
+  CONSTRAINT `fk_document_groups_student` FOREIGN KEY (`student_id`) REFERENCES `students` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- --------------------------------------------------------
+/*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Table structure for table `logs`
+-- Dumping data for table `document_groups`
 --
 
-CREATE TABLE `logs` (
-  `id` int(10) UNSIGNED NOT NULL,
-  `user_id` int(10) UNSIGNED DEFAULT NULL,
-  `action` varchar(255) NOT NULL,
-  `entity_type` varchar(100) NOT NULL,
-  `entity_id` int(10) UNSIGNED DEFAULT NULL,
-  `old_value` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`old_value`)),
-  `new_value` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`new_value`)),
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+LOCK TABLES `document_groups` WRITE;
+/*!40000 ALTER TABLE `document_groups` DISABLE KEYS */;
+/*!40000 ALTER TABLE `document_groups` ENABLE KEYS */;
+UNLOCK TABLES;
 
--- --------------------------------------------------------
+--
+-- Table structure for table `documents`
+--
+
+DROP TABLE IF EXISTS `documents`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `documents` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `student_id` int(10) unsigned NOT NULL,
+  `document_group_id` int(10) unsigned NOT NULL,
+  `original_name` varchar(255) NOT NULL,
+  `stored_name` varchar(255) NOT NULL,
+  `file_path` varchar(255) NOT NULL,
+  `mime_type` varchar(100) NOT NULL,
+  `file_size` int(10) unsigned NOT NULL,
+  `version_number` int(10) unsigned NOT NULL DEFAULT 1,
+  `is_current` tinyint(1) NOT NULL DEFAULT 1,
+  `uploaded_by` int(10) unsigned DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `deleted_at` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_documents_group_version` (`document_group_id`,`version_number`),
+  KEY `idx_documents_student_id` (`student_id`),
+  KEY `idx_documents_document_group_id` (`document_group_id`),
+  KEY `idx_documents_is_current` (`is_current`),
+  KEY `idx_documents_created_at` (`created_at`),
+  KEY `idx_documents_uploaded_by` (`uploaded_by`),
+  KEY `idx_documents_deleted_at` (`deleted_at`),
+  KEY `idx_documents_student_current` (`student_id`,`is_current`),
+  CONSTRAINT `fk_documents_group` FOREIGN KEY (`document_group_id`) REFERENCES `document_groups` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `fk_documents_student` FOREIGN KEY (`student_id`) REFERENCES `students` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `fk_documents_uploaded_by` FOREIGN KEY (`uploaded_by`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `documents`
+--
+
+LOCK TABLES `documents` WRITE;
+/*!40000 ALTER TABLE `documents` DISABLE KEYS */;
+/*!40000 ALTER TABLE `documents` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `login_attempts`
 --
 
+DROP TABLE IF EXISTS `login_attempts`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `login_attempts` (
-  `id` int(10) unsigned NOT NULL,
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `login_key` varchar(190) NOT NULL,
   `ip_address` varchar(45) NOT NULL,
   `attempt_count` int(10) unsigned NOT NULL DEFAULT 0,
   `first_attempt_ts` int(10) unsigned NOT NULL DEFAULT 0,
   `last_attempt_ts` int(10) unsigned NOT NULL DEFAULT 0,
-  `blocked_until_ts` int(10) unsigned NOT NULL DEFAULT 0
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  `blocked_until_ts` int(10) unsigned NOT NULL DEFAULT 0,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_login_attempts_key_ip` (`login_key`,`ip_address`),
+  KEY `idx_login_attempts_last_attempt` (`last_attempt_ts`),
+  KEY `idx_login_attempts_blocked_until` (`blocked_until_ts`)
+) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
--- --------------------------------------------------------
+--
+-- Dumping data for table `login_attempts`
+--
+
+LOCK TABLES `login_attempts` WRITE;
+/*!40000 ALTER TABLE `login_attempts` DISABLE KEYS */;
+/*!40000 ALTER TABLE `login_attempts` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `logs`
+--
+
+DROP TABLE IF EXISTS `logs`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `logs` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `user_id` int(10) unsigned DEFAULT NULL,
+  `action` varchar(255) NOT NULL,
+  `entity_type` varchar(100) NOT NULL,
+  `entity_id` int(10) unsigned DEFAULT NULL,
+  `old_value` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`old_value`)),
+  `new_value` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`new_value`)),
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `idx_logs_user_id` (`user_id`),
+  KEY `idx_logs_entity_type` (`entity_type`),
+  KEY `idx_logs_created_at` (`created_at`),
+  KEY `idx_logs_entity_lookup` (`entity_type`,`entity_id`,`created_at`),
+  CONSTRAINT `fk_logs_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=488 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `logs`
+--
+
+LOCK TABLES `logs` WRITE;
+/*!40000 ALTER TABLE `logs` DISABLE KEYS */;
+INSERT INTO `logs` VALUES (1,1,'create','STUDENT',1,NULL,'{\"student_id\":\"TMP-SMOKE-20260227142904\",\"first_name\":\"Temp\",\"last_name\":\"SmokeTest\",\"sex\":\"MALE\",\"batch_year\":2026,\"grade_level\":\"Grade 1\",\"section\":\"A\"}','2026-02-27 06:29:04'),(2,1,'delete','STUDENT',1,'{\"id\":1,\"student_id\":\"TMP-SMOKE-20260227142904\",\"first_name\":\"Temp\",\"last_name\":\"SmokeTest\",\"sex\":\"MALE\",\"batch_year\":2026,\"grade_level\":\"Grade 1\",\"section\":\"A\",\"disability_type\":null,\"status\":\"ACTIVE\",\"created_at\":\"2026-02-27 14:29:04\",\"updated_at\":\"2026-02-27 14:29:04\",\"deleted_at\":null}',NULL,'2026-02-27 06:29:04'),(3,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:15:07'),(4,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 07:15:14'),(5,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:15:15'),(6,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"teacher-management.html\",\"title\":\"Teacher Management | ARCHIVIA\"}','2026-02-27 07:15:17'),(7,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"organizational-chart.html\",\"title\":\"Organizational Chart | ARCHIVIA\"}','2026-02-27 07:15:19'),(8,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"teacher-management.html\",\"title\":\"Teacher Management | ARCHIVIA\"}','2026-02-27 07:15:21'),(9,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"documents.html\",\"title\":\"Document Archive | ARCHIVIA\"}','2026-02-27 07:15:21'),(10,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 07:15:23'),(11,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"students.html\",\"title\":\"Students | ARCHIVIA\"}','2026-02-27 07:15:36'),(12,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"documents.html\",\"title\":\"Document Archive | ARCHIVIA\"}','2026-02-27 07:15:38'),(13,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 07:15:39'),(14,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"students.html\",\"title\":\"Students | ARCHIVIA\"}','2026-02-27 07:16:51'),(15,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 07:16:53'),(16,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"teacher-management.html\",\"title\":\"Teacher Management | ARCHIVIA\"}','2026-02-27 07:16:59'),(17,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"organizational-chart.html\",\"title\":\"Organizational Chart | ARCHIVIA\"}','2026-02-27 07:17:24'),(18,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"documents.html\",\"title\":\"Document Archive | ARCHIVIA\"}','2026-02-27 07:17:25'),(19,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 07:17:30'),(20,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"organizational-chart.html\",\"title\":\"Organizational Chart | ARCHIVIA\"}','2026-02-27 07:18:01'),(21,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"organizational-chart.html\",\"title\":\"Organizational Chart | ARCHIVIA\"}','2026-02-27 07:20:30'),(22,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 07:20:32'),(23,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"students.html\",\"title\":\"Students | ARCHIVIA\"}','2026-02-27 07:20:33'),(24,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 07:20:35'),(25,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 07:20:41'),(26,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 07:20:41'),(27,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 07:20:42'),(28,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"students.html\",\"title\":\"Students | ARCHIVIA\"}','2026-02-27 07:20:44'),(29,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"documents.html\",\"title\":\"Document Archive | ARCHIVIA\"}','2026-02-27 07:20:45'),(30,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"teacher-management.html\",\"title\":\"Teacher Management | ARCHIVIA\"}','2026-02-27 07:20:48'),(31,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:20:50'),(32,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 07:20:51'),(33,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 07:20:53'),(34,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 07:22:31'),(35,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 07:22:32'),(36,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 07:22:32'),(37,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 07:22:35'),(38,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"students.html\",\"title\":\"Students | ARCHIVIA\"}','2026-02-27 07:22:36'),(39,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"documents.html\",\"title\":\"Document Archive | ARCHIVIA\"}','2026-02-27 07:22:39'),(40,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:22:40'),(41,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 07:22:41'),(42,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 07:23:57'),(43,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 07:24:00'),(44,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"students.html\",\"title\":\"Students | ARCHIVIA\"}','2026-02-27 07:24:06'),(45,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"documents.html\",\"title\":\"Document Archive | ARCHIVIA\"}','2026-02-27 07:24:10'),(46,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"documents.html\",\"title\":\"Document Archive | ARCHIVIA\"}','2026-02-27 07:24:14'),(47,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"documents.html\",\"title\":\"Document Archive | ARCHIVIA\"}','2026-02-27 07:24:14'),(48,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"documents.html\",\"title\":\"Document Archive | ARCHIVIA\"}','2026-02-27 07:24:14'),(49,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"documents.html\",\"title\":\"Document Archive | ARCHIVIA\"}','2026-02-27 07:24:15'),(50,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"organizational-chart.html\",\"title\":\"Organizational Chart | ARCHIVIA\"}','2026-02-27 07:24:17'),(51,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"teacher-management.html\",\"title\":\"Teacher Management | ARCHIVIA\"}','2026-02-27 07:24:18'),(52,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:24:19'),(53,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 07:24:21'),(54,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:24:23'),(55,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 07:24:55'),(56,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:24:57'),(57,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"teacher-management.html\",\"title\":\"Teacher Management | ARCHIVIA\"}','2026-02-27 07:25:10'),(58,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:25:13'),(59,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"teacher-management.html\",\"title\":\"Teacher Management | ARCHIVIA\"}','2026-02-27 07:25:15'),(60,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"documents.html\",\"title\":\"Document Archive | ARCHIVIA\"}','2026-02-27 07:25:30'),(61,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"teacher-management.html\",\"title\":\"Teacher Management | ARCHIVIA\"}','2026-02-27 07:25:32'),(62,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:25:34'),(63,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"teacher-management.html\",\"title\":\"Teacher Management | ARCHIVIA\"}','2026-02-27 07:25:36'),(64,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"documents.html\",\"title\":\"Document Archive | ARCHIVIA\"}','2026-02-27 07:25:38'),(65,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"teacher-management.html\",\"title\":\"Teacher Management | ARCHIVIA\"}','2026-02-27 07:25:40'),(66,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:25:42'),(67,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 07:25:44'),(68,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"documents.html\",\"title\":\"Document Archive | ARCHIVIA\"}','2026-02-27 07:25:45'),(69,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"students.html\",\"title\":\"Students | ARCHIVIA\"}','2026-02-27 07:25:47'),(70,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 07:26:08'),(71,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 07:26:53'),(72,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"students.html\",\"title\":\"Students | ARCHIVIA\"}','2026-02-27 07:26:54'),(73,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:26:56'),(74,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 07:27:02'),(75,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"students.html\",\"title\":\"Students | ARCHIVIA\"}','2026-02-27 07:27:05'),(76,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 07:27:13'),(77,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"students.html\",\"title\":\"Students | ARCHIVIA\"}','2026-02-27 07:27:18'),(78,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 07:27:19'),(79,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:27:23'),(80,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:27:42'),(81,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 07:27:43'),(82,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"students.html\",\"title\":\"Students | ARCHIVIA\"}','2026-02-27 07:27:46'),(83,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"students.html\",\"title\":\"Students | ARCHIVIA\"}','2026-02-27 07:27:50'),(84,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"students.html\",\"title\":\"Students | ARCHIVIA\"}','2026-02-27 07:27:50'),(85,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"students.html\",\"title\":\"Students | ARCHIVIA\"}','2026-02-27 07:27:51'),(86,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"students.html\",\"title\":\"Students | ARCHIVIA\"}','2026-02-27 07:27:52'),(87,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 07:28:19'),(88,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"students.html\",\"title\":\"Students | ARCHIVIA\"}','2026-02-27 07:28:21'),(89,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"documents.html\",\"title\":\"Document Archive | ARCHIVIA\"}','2026-02-27 07:28:22'),(90,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"organizational-chart.html\",\"title\":\"Organizational Chart | ARCHIVIA\"}','2026-02-27 07:28:23'),(91,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"teacher-management.html\",\"title\":\"Teacher Management | ARCHIVIA\"}','2026-02-27 07:28:25'),(92,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:28:27'),(93,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 07:28:28'),(94,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 07:28:31'),(95,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"students.html\",\"title\":\"Students | ARCHIVIA\"}','2026-02-27 07:28:35'),(96,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"documents.html\",\"title\":\"Document Archive | ARCHIVIA\"}','2026-02-27 07:28:41'),(97,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"teacher-management.html\",\"title\":\"Teacher Management | ARCHIVIA\"}','2026-02-27 07:28:50'),(98,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:28:55'),(99,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 07:29:00'),(100,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"teacher-management.html\",\"title\":\"Teacher Management | ARCHIVIA\"}','2026-02-27 07:29:05'),(101,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:29:07'),(102,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"students.html\",\"title\":\"Students | ARCHIVIA\"}','2026-02-27 07:32:03'),(103,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:32:17'),(104,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:33:14'),(105,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:33:15'),(106,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:33:20'),(107,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 07:33:24'),(108,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"students.html\",\"title\":\"Students | ARCHIVIA\"}','2026-02-27 07:33:26'),(109,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"documents.html\",\"title\":\"Document Archive | ARCHIVIA\"}','2026-02-27 07:33:29'),(110,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"organizational-chart.html\",\"title\":\"Organizational Chart | ARCHIVIA\"}','2026-02-27 07:33:32'),(111,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"teacher-management.html\",\"title\":\"Teacher Management | ARCHIVIA\"}','2026-02-27 07:33:33'),(112,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:33:36'),(113,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"teacher-management.html\",\"title\":\"Teacher Management | ARCHIVIA\"}','2026-02-27 07:33:49'),(114,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:33:55'),(115,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:34:37'),(116,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:36:03'),(117,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 07:36:16'),(118,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:36:21'),(119,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:36:35'),(120,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:36:36'),(121,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:36:36'),(122,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:36:40'),(123,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:36:45'),(124,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:36:46'),(125,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:36:51'),(126,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:36:59'),(127,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:37:10'),(128,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:37:30'),(129,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:37:47'),(130,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:37:47'),(131,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:38:12'),(132,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:38:13'),(133,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:38:13'),(134,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:38:27'),(135,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:39:40'),(136,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:39:42'),(137,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:39:43'),(138,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:39:43'),(139,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 07:39:51'),(140,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"students.html\",\"title\":\"Students | ARCHIVIA\"}','2026-02-27 07:39:54'),(141,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"documents.html\",\"title\":\"Document Archive | ARCHIVIA\"}','2026-02-27 07:39:57'),(142,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"organizational-chart.html\",\"title\":\"Organizational Chart | ARCHIVIA\"}','2026-02-27 07:40:12'),(143,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"organizational-chart.html\",\"title\":\"Organizational Chart | ARCHIVIA\"}','2026-02-27 07:40:26'),(144,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"teacher-management.html\",\"title\":\"Teacher Management | ARCHIVIA\"}','2026-02-27 07:40:28'),(145,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:40:32'),(146,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:47:00'),(147,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:47:01'),(148,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:47:01'),(149,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:47:01'),(150,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:47:01'),(151,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:47:22'),(152,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:47:23'),(153,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:47:23'),(154,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:47:23'),(155,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 07:48:03'),(156,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 07:48:54'),(157,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"students.html\",\"title\":\"Students | ARCHIVIA\"}','2026-02-27 07:49:01'),(158,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 07:49:04'),(159,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:49:13'),(160,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:50:09'),(161,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:51:02'),(162,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:51:02'),(163,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:51:02'),(164,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:51:03'),(165,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:51:03'),(166,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:51:03'),(167,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:51:03'),(168,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:51:03'),(169,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:51:04'),(170,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:51:04'),(171,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:51:04'),(172,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:51:04'),(173,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:51:05'),(174,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:51:06'),(175,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:51:06'),(176,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:51:06'),(177,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:51:06'),(178,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:51:06'),(179,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:51:06'),(180,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:51:07'),(181,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:51:07'),(182,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:51:07'),(183,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:51:07'),(184,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:51:07'),(185,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:51:07'),(186,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:51:07'),(187,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:51:08'),(188,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:51:08'),(189,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:51:08'),(190,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:51:08'),(191,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:51:08'),(192,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:51:08'),(193,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:51:08'),(194,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:51:09'),(195,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:51:09'),(196,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:51:09'),(197,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:51:10'),(198,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:51:10'),(199,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:51:10'),(200,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:51:10'),(201,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:51:22'),(202,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:51:54'),(203,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:52:13'),(204,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 07:52:28'),(205,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"students.html\",\"title\":\"Students | ARCHIVIA\"}','2026-02-27 07:52:56'),(206,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"organizational-chart.html\",\"title\":\"Organizational Chart | ARCHIVIA\"}','2026-02-27 07:52:57'),(207,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"documents.html\",\"title\":\"Document Archive | ARCHIVIA\"}','2026-02-27 07:53:00'),(208,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"teacher-management.html\",\"title\":\"Teacher Management | ARCHIVIA\"}','2026-02-27 07:53:01'),(209,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:53:05'),(210,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:53:19'),(211,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"documents.html\",\"title\":\"Document Archive | ARCHIVIA\"}','2026-02-27 07:53:49'),(212,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"students.html\",\"title\":\"Students | ARCHIVIA\"}','2026-02-27 07:53:50'),(213,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 07:53:51'),(214,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 07:58:03'),(215,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 07:58:12'),(216,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 07:58:22'),(217,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 07:58:31'),(218,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 07:58:32'),(219,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 07:58:32'),(220,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 07:58:33'),(221,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 07:58:41'),(222,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 07:58:44'),(223,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 07:58:58'),(224,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 07:58:59'),(225,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 07:58:59'),(226,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 07:59:00'),(227,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 07:59:00'),(228,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 07:59:00'),(229,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 08:00:32'),(230,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 08:00:37'),(231,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 08:00:37'),(232,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 08:00:37'),(233,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"students.html\",\"title\":\"Students | ARCHIVIA\"}','2026-02-27 08:00:39'),(234,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"documents.html\",\"title\":\"Document Archive | ARCHIVIA\"}','2026-02-27 08:00:41'),(235,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 08:04:19'),(236,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 08:04:26'),(237,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 08:04:27'),(238,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 08:04:28'),(239,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 08:04:28'),(240,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 08:04:29'),(241,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 08:04:29'),(242,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 08:04:30'),(243,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"students.html\",\"title\":\"Students | ARCHIVIA\"}','2026-02-27 08:04:38'),(244,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"teacher-management.html\",\"title\":\"Teacher Management | ARCHIVIA\"}','2026-02-27 08:04:44'),(245,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 08:04:50'),(246,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 08:07:30'),(247,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 08:07:30'),(248,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 08:07:30'),(249,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 08:07:30'),(250,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 08:07:31'),(251,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 08:07:31'),(252,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 08:07:31'),(253,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 08:07:35'),(254,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"students.html\",\"title\":\"Students | ARCHIVIA\"}','2026-02-27 08:07:37'),(255,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"documents.html\",\"title\":\"Document Archive | ARCHIVIA\"}','2026-02-27 08:07:38'),(256,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"students.html\",\"title\":\"Students | ARCHIVIA\"}','2026-02-27 08:07:40'),(257,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"students.html\",\"title\":\"Students | ARCHIVIA\"}','2026-02-27 08:07:53'),(258,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"students.html\",\"title\":\"Students | ARCHIVIA\"}','2026-02-27 08:07:53'),(259,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"students.html\",\"title\":\"Students | ARCHIVIA\"}','2026-02-27 08:07:53'),(260,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"students.html\",\"title\":\"Students | ARCHIVIA\"}','2026-02-27 08:07:53'),(261,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"students.html\",\"title\":\"Students | ARCHIVIA\"}','2026-02-27 08:07:53'),(262,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 08:07:55'),(263,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"students.html\",\"title\":\"Students | ARCHIVIA\"}','2026-02-27 08:07:56'),(264,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"documents.html\",\"title\":\"Document Archive | ARCHIVIA\"}','2026-02-27 08:07:57'),(265,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"organizational-chart.html\",\"title\":\"Organizational Chart | ARCHIVIA\"}','2026-02-27 08:07:58'),(266,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"teacher-management.html\",\"title\":\"Teacher Management | ARCHIVIA\"}','2026-02-27 08:08:00'),(267,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"teacher-management.html\",\"title\":\"Teacher Management | ARCHIVIA\"}','2026-02-27 08:08:03'),(268,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"teacher-management.html\",\"title\":\"Teacher Management | ARCHIVIA\"}','2026-02-27 08:08:03'),(269,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"teacher-management.html\",\"title\":\"Teacher Management | ARCHIVIA\"}','2026-02-27 08:08:03'),(270,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"teacher-management.html\",\"title\":\"Teacher Management | ARCHIVIA\"}','2026-02-27 08:08:03'),(271,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 08:08:05'),(272,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 08:08:06'),(273,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 08:08:09'),(274,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 08:08:11'),(275,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 08:08:12'),(276,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 08:08:12'),(277,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 08:08:12'),(278,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 08:08:12'),(279,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 08:08:12'),(280,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 08:09:07'),(281,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 08:09:07'),(282,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 08:09:08'),(283,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 08:09:08'),(284,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 08:09:09'),(285,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 08:09:09'),(286,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 08:09:10'),(287,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 08:09:10'),(288,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 08:09:11'),(289,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"students.html\",\"title\":\"Students | ARCHIVIA\"}','2026-02-27 08:09:16'),(290,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"documents.html\",\"title\":\"Document Archive | ARCHIVIA\"}','2026-02-27 08:09:18'),(291,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"organizational-chart.html\",\"title\":\"Organizational Chart | ARCHIVIA\"}','2026-02-27 08:09:19'),(292,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"teacher-management.html\",\"title\":\"Teacher Management | ARCHIVIA\"}','2026-02-27 08:09:21'),(293,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 08:09:22'),(294,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 08:09:24'),(295,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 08:12:17'),(296,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 08:12:18'),(297,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 08:12:18'),(298,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 08:12:18'),(299,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 08:12:18'),(300,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 08:12:18'),(301,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 08:12:18'),(302,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 08:12:18'),(303,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 08:12:19'),(304,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 08:12:19'),(305,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 08:12:19'),(306,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 08:12:19'),(307,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 08:12:19'),(308,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 08:12:19'),(309,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 08:12:20'),(310,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 08:12:20'),(311,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 08:12:20'),(312,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 08:12:20'),(313,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 08:12:20'),(314,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 08:12:20'),(315,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 08:12:21'),(316,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 08:12:21'),(317,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 08:12:21'),(318,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 08:12:21'),(319,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 08:12:21'),(320,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 08:12:21'),(321,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 08:12:22'),(322,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 08:12:22'),(323,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 08:12:22'),(324,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 08:12:22'),(325,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 08:12:22'),(326,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 08:12:23'),(327,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 08:12:23'),(328,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 08:12:23'),(329,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 08:12:23'),(330,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 08:12:23'),(331,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 08:12:23'),(332,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 08:12:24'),(333,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 08:12:24'),(334,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 08:12:24'),(335,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 08:13:02'),(336,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 08:13:09'),(337,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 08:13:10'),(338,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 08:13:10'),(339,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 08:13:10'),(340,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 08:13:10'),(341,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 08:13:10'),(342,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 08:13:10'),(343,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 08:13:10'),(344,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 08:13:11'),(345,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 08:13:11'),(346,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 08:13:11'),(347,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 08:13:11'),(348,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 08:13:11'),(349,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 08:13:11'),(350,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 08:13:12'),(351,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 08:13:12'),(352,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 08:13:12'),(353,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 08:13:12'),(354,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 08:13:12'),(355,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 08:13:12'),(356,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 08:13:13'),(357,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 08:13:13'),(358,1,'update','SETTINGS',0,NULL,'{\"school_name\":\"Archivia Integrated School\",\"data_retention_years\":\"7\",\"audit_log_level\":\"Detailed\"}','2026-02-27 08:13:42'),(359,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 08:15:06'),(360,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 08:15:06'),(361,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 08:15:06'),(362,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 08:15:06'),(363,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 08:15:06'),(364,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 08:15:06'),(365,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 08:15:07'),(366,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 08:15:07'),(367,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 08:15:07'),(368,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 08:15:07'),(369,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 08:15:07'),(370,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 08:15:07'),(371,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 08:15:08'),(372,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 08:15:08'),(373,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 08:15:11'),(374,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 08:15:11'),(375,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 08:15:11'),(376,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 08:15:11'),(377,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 08:15:11'),(378,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 08:15:11'),(379,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 08:15:12'),(380,1,'update','SETTINGS',0,'{\"audit_log_level\":\"Detailed\",\"data_retention_years\":\"7\",\"school_name\":\"Archivia Integrated School\"}','{\"school_name\":\"Archivia Integrated Schools\",\"data_retention_years\":\"7\",\"audit_log_level\":\"Detailed\"}','2026-02-27 08:15:16'),(381,1,'update','SETTINGS',0,'{\"audit_log_level\":\"Detailed\",\"data_retention_years\":\"7\",\"school_name\":\"Archivia Integrated Schools\"}','{\"school_name\":\"Archivia Integrated Schools\",\"data_retention_years\":\"7\",\"audit_log_level\":\"Detailed\"}','2026-02-27 08:15:21'),(382,1,'update','SETTINGS',0,'{\"audit_log_level\":\"Detailed\",\"data_retention_years\":\"7\",\"school_name\":\"Archivia Integrated Schools\"}','{\"school_name\":\"Archivia Integrated Schools\",\"data_retention_years\":\"7\",\"audit_log_level\":\"Detailed\"}','2026-02-27 08:15:21'),(383,1,'update','SETTINGS',0,'{\"audit_log_level\":\"Detailed\",\"data_retention_years\":\"7\",\"school_name\":\"Archivia Integrated Schools\"}','{\"school_name\":\"Archivia Integrated Schools\",\"data_retention_years\":\"7\",\"audit_log_level\":\"Detailed\"}','2026-02-27 08:15:21'),(384,1,'update','SETTINGS',0,'{\"audit_log_level\":\"Detailed\",\"data_retention_years\":\"7\",\"school_name\":\"Archivia Integrated Schools\"}','{\"school_name\":\"Archivia Integrated Schools\",\"data_retention_years\":\"7\",\"audit_log_level\":\"Detailed\"}','2026-02-27 08:15:22'),(385,1,'update','SETTINGS',0,'{\"audit_log_level\":\"Detailed\",\"data_retention_years\":\"7\",\"school_name\":\"Archivia Integrated Schools\"}','{\"school_name\":\"Archivia Integrated Schools\",\"data_retention_years\":\"7\",\"audit_log_level\":\"Detailed\"}','2026-02-27 08:15:22'),(386,1,'update','SETTINGS',0,'{\"audit_log_level\":\"Detailed\",\"data_retention_years\":\"7\",\"school_name\":\"Archivia Integrated Schools\"}','{\"school_name\":\"Archivia Integrated Schools\",\"data_retention_years\":\"7\",\"audit_log_level\":\"Detailed\"}','2026-02-27 08:15:22'),(387,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 08:15:27'),(388,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 08:15:40'),(389,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 08:15:41'),(390,1,'update','SETTINGS',0,'{\"audit_log_level\":\"Detailed\",\"data_retention_years\":\"7\",\"school_name\":\"Archivia Integrated Schools\"}','{\"school_name\":\"Archivia Integrated School\",\"data_retention_years\":\"7\",\"audit_log_level\":\"Detailed\"}','2026-02-27 08:15:46'),(391,1,'update','SETTINGS',0,'{\"audit_log_level\":\"Detailed\",\"data_retention_years\":\"7\",\"school_name\":\"Archivia Integrated School\"}','{\"school_name\":\"Archivia Integrated School\",\"data_retention_years\":\"10\",\"audit_log_level\":\"Detailed\"}','2026-02-27 08:15:58'),(392,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 08:15:59'),(393,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"students.html\",\"title\":\"Students | ARCHIVIA\"}','2026-02-27 08:16:21'),(394,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 08:16:22'),(395,1,'update','SETTINGS',0,'{\"audit_log_level\":\"Detailed\",\"data_retention_years\":\"10\",\"school_name\":\"Archivia Integrated School\"}','{\"school_name\":\"Archivia Integrated School\",\"data_retention_years\":\"10\",\"audit_log_level\":\"Detailed\"}','2026-02-27 08:16:26'),(396,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 08:16:27'),(397,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 08:16:28'),(398,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 08:16:33'),(399,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 08:17:56'),(400,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 08:20:27'),(401,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 08:20:27'),(402,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 08:20:27'),(403,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 08:20:27'),(404,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 08:20:32'),(405,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 08:20:36'),(406,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 08:29:33'),(407,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 08:29:33'),(408,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 08:29:33'),(409,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 08:29:33'),(410,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 08:29:33'),(411,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 08:29:33'),(412,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 08:29:34'),(413,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 08:29:34'),(414,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 08:29:34'),(415,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 08:29:34'),(416,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 08:29:34'),(417,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 08:29:34'),(418,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 08:29:34'),(419,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 08:29:35'),(420,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 08:29:35'),(421,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 08:29:35'),(422,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 08:29:35'),(423,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 08:29:35'),(424,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 08:29:35'),(425,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 08:29:36'),(426,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 08:29:36'),(427,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 08:29:36'),(428,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 08:29:36'),(429,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 08:29:36'),(430,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 08:29:45'),(431,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 08:29:45'),(432,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 08:29:45'),(433,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 08:29:45'),(434,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 08:29:45'),(435,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 08:29:46'),(436,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 08:29:46'),(437,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 08:29:46'),(438,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 08:29:46'),(439,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 08:29:46'),(440,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 08:29:47'),(441,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 08:29:47'),(442,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 08:29:47'),(443,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 08:29:47'),(444,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"students.html\",\"title\":\"Students | ARCHIVIA\"}','2026-02-27 08:29:50'),(445,1,'create','STUDENT',2,NULL,'{\"student_id\":\"LONG-TEST-001\",\"first_name\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"last_name\":\"Tester\",\"sex\":\"MALE\",\"batch_year\":2026,\"grade_level\":\"G1\",\"section\":\"A\"}','2026-02-27 08:31:11'),(446,1,'create','STUDENT',3,NULL,'{\"student_id\":\"19004563700\",\"first_name\":\"Connie\",\"last_name\":\"Frances Fumar\",\"sex\":\"MALE\",\"batch_year\":2026,\"grade_level\":\"Grade 2\",\"section\":\"Love Joy Hope\"}','2026-02-27 08:33:06'),(447,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"student-profile.html\",\"title\":\"Student Profile | ARCHIVIA\"}','2026-02-27 08:33:25'),(448,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 08:34:08'),(449,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"student-profile.html\",\"title\":\"Student Profile | ARCHIVIA\"}','2026-02-27 08:34:23'),(450,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 08:34:25'),(451,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"students.html\",\"title\":\"Students | ARCHIVIA\"}','2026-02-27 08:36:01'),(452,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"documents.html\",\"title\":\"Document Archive | ARCHIVIA\"}','2026-02-27 08:36:02'),(453,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"organizational-chart.html\",\"title\":\"Organizational Chart | ARCHIVIA\"}','2026-02-27 08:36:03'),(454,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"teacher-management.html\",\"title\":\"Teacher Management | ARCHIVIA\"}','2026-02-27 08:36:03'),(455,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 08:36:04'),(456,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 08:36:04'),(457,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 08:36:08'),(458,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"students.html\",\"title\":\"Students | ARCHIVIA\"}','2026-02-27 08:36:37'),(459,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"teacher-management.html\",\"title\":\"Teacher Management | ARCHIVIA\"}','2026-02-27 08:36:38'),(460,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"organizational-chart.html\",\"title\":\"Organizational Chart | ARCHIVIA\"}','2026-02-27 08:36:38'),(461,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"documents.html\",\"title\":\"Document Archive | ARCHIVIA\"}','2026-02-27 08:36:39'),(462,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 08:36:40'),(463,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 08:36:41'),(464,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 08:36:42'),(465,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 08:36:43'),(466,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 08:36:44'),(467,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 08:37:31'),(468,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 08:37:34'),(469,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"students.html\",\"title\":\"Students | ARCHIVIA\"}','2026-02-27 08:37:36'),(470,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"documents.html\",\"title\":\"Document Archive | ARCHIVIA\"}','2026-02-27 08:37:37'),(471,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"organizational-chart.html\",\"title\":\"Organizational Chart | ARCHIVIA\"}','2026-02-27 08:37:53'),(472,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 08:38:00'),(473,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"students.html\",\"title\":\"Students | ARCHIVIA\"}','2026-02-27 08:38:00'),(474,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"documents.html\",\"title\":\"Document Archive | ARCHIVIA\"}','2026-02-27 08:38:01'),(475,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"organizational-chart.html\",\"title\":\"Organizational Chart | ARCHIVIA\"}','2026-02-27 08:38:02'),(476,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"teacher-management.html\",\"title\":\"Teacher Management | ARCHIVIA\"}','2026-02-27 08:38:02'),(477,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"activity-logs.html\",\"title\":\"Activity Logs | ARCHIVIA\"}','2026-02-27 08:38:03'),(478,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"settings.html\",\"title\":\"Settings | ARCHIVIA\"}','2026-02-27 08:38:03'),(479,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 08:38:05'),(480,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"student-profile.html\",\"title\":\"Student Profile | ARCHIVIA\"}','2026-02-27 08:38:14'),(481,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 08:39:54'),(482,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 08:47:34'),(483,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 08:48:45'),(484,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 08:48:46'),(485,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 08:48:46'),(486,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 08:49:32'),(487,1,'page_view','PAGE',NULL,NULL,'{\"page\":\"dashboard-admin.html\",\"title\":\"Admin Dashboard | ARCHIVIA\"}','2026-02-27 08:49:33');
+/*!40000 ALTER TABLE `logs` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `organization_chart_members`
 --
 
+DROP TABLE IF EXISTS `organization_chart_members`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `organization_chart_members` (
-  `id` int(10) unsigned NOT NULL,
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(120) NOT NULL,
   `position_title` varchar(120) NOT NULL,
   `photo_data` longtext DEFAULT NULL,
@@ -103,64 +168,161 @@ CREATE TABLE `organization_chart_members` (
   `is_active` tinyint(1) NOT NULL DEFAULT 1,
   `created_by` int(10) unsigned DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `idx_org_chart_active_sort` (`is_active`,`sort_order`,`id`),
+  KEY `idx_org_chart_created_by` (`created_by`),
+  CONSTRAINT `fk_org_chart_created_by` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
--- --------------------------------------------------------
+--
+-- Dumping data for table `organization_chart_members`
+--
+
+LOCK TABLES `organization_chart_members` WRITE;
+/*!40000 ALTER TABLE `organization_chart_members` DISABLE KEYS */;
+/*!40000 ALTER TABLE `organization_chart_members` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `students`
 --
 
+DROP TABLE IF EXISTS `students`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `students` (
-  `id` int(10) UNSIGNED NOT NULL,
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `student_id` varchar(50) NOT NULL,
   `first_name` varchar(100) NOT NULL,
   `last_name` varchar(100) NOT NULL,
-  `sex` enum('MALE','FEMALE') NOT NULL,
+  `sex` enum('MALE','FEMALE') NOT NULL DEFAULT 'MALE',
   `batch_year` int(11) NOT NULL,
   `grade_level` varchar(50) DEFAULT NULL,
   `section` varchar(50) DEFAULT NULL,
+  `disability_type` varchar(100) DEFAULT NULL,
+  `status` enum('ACTIVE','ARCHIVED') NOT NULL DEFAULT 'ACTIVE',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-  `deleted_at` datetime DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  `deleted_at` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_students_student_id` (`student_id`),
+  KEY `idx_students_batch_year` (`batch_year`),
+  KEY `idx_students_last_name` (`last_name`),
+  KEY `idx_students_status` (`status`),
+  KEY `idx_students_deleted_at` (`deleted_at`),
+  KEY `idx_students_search` (`last_name`,`first_name`,`batch_year`,`status`),
+  FULLTEXT KEY `ftx_students_name` (`first_name`,`last_name`)
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
--- --------------------------------------------------------
+--
+-- Dumping data for table `students`
+--
+
+LOCK TABLES `students` WRITE;
+/*!40000 ALTER TABLE `students` DISABLE KEYS */;
+INSERT INTO `students` VALUES (1,'TMP-SMOKE-20260227142904','Temp','SmokeTest','MALE',2026,'Grade 1','A',NULL,'ACTIVE','2026-02-27 06:29:04','2026-02-27 06:29:04','2026-02-27 14:29:04'),(2,'LONG-TEST-001','AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA','Tester','MALE',2026,'G1','A',NULL,'ACTIVE','2026-02-27 08:31:11','2026-02-27 08:31:11',NULL),(3,'19004563700','Connie','Frances Fumar','MALE',2026,'Grade 2','Love Joy Hope',NULL,'ACTIVE','2026-02-27 08:33:06','2026-02-27 08:33:06',NULL);
+/*!40000 ALTER TABLE `students` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `system_backups`
 --
 
+DROP TABLE IF EXISTS `system_backups`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `system_backups` (
-  `id` int(10) UNSIGNED NOT NULL,
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `file_name` varchar(255) NOT NULL,
   `file_path` varchar(255) NOT NULL,
-  `created_by` int(10) UNSIGNED DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+  `created_by` int(10) unsigned DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `idx_system_backups_created_by` (`created_by`),
+  KEY `idx_system_backups_created_at` (`created_at`),
+  CONSTRAINT `fk_system_backups_created_by` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
--- --------------------------------------------------------
+--
+-- Dumping data for table `system_backups`
+--
+
+LOCK TABLES `system_backups` WRITE;
+/*!40000 ALTER TABLE `system_backups` DISABLE KEYS */;
+/*!40000 ALTER TABLE `system_backups` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `system_settings`
+--
+
+DROP TABLE IF EXISTS `system_settings`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `system_settings` (
+  `setting_key` varchar(80) NOT NULL,
+  `setting_value` text DEFAULT NULL,
+  `updated_by` int(10) unsigned DEFAULT NULL,
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`setting_key`),
+  KEY `idx_system_settings_updated_by` (`updated_by`),
+  CONSTRAINT `fk_system_settings_updated_by` FOREIGN KEY (`updated_by`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `system_settings`
+--
+
+LOCK TABLES `system_settings` WRITE;
+/*!40000 ALTER TABLE `system_settings` DISABLE KEYS */;
+INSERT INTO `system_settings` VALUES ('audit_log_level','Detailed',1,'2026-02-27 08:16:26'),('data_retention_years','10',1,'2026-02-27 08:16:26'),('school_name','Archivia Integrated School',1,'2026-02-27 08:16:26');
+/*!40000 ALTER TABLE `system_settings` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `teacher_assignments`
 --
 
+DROP TABLE IF EXISTS `teacher_assignments`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `teacher_assignments` (
-  `id` int(10) UNSIGNED NOT NULL,
-  `teacher_id` int(10) UNSIGNED NOT NULL,
-  `student_id` int(10) UNSIGNED NOT NULL,
-  `assigned_at` timestamp NOT NULL DEFAULT current_timestamp()
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `teacher_id` int(10) unsigned NOT NULL,
+  `student_id` int(10) unsigned NOT NULL,
+  `assigned_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_teacher_assignments_teacher_student` (`teacher_id`,`student_id`),
+  KEY `idx_teacher_assignments_teacher_id` (`teacher_id`),
+  KEY `idx_teacher_assignments_student_id` (`student_id`),
+  CONSTRAINT `fk_teacher_assignments_student` FOREIGN KEY (`student_id`) REFERENCES `students` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `fk_teacher_assignments_teacher` FOREIGN KEY (`teacher_id`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
--- --------------------------------------------------------
+--
+-- Dumping data for table `teacher_assignments`
+--
+
+LOCK TABLES `teacher_assignments` WRITE;
+/*!40000 ALTER TABLE `teacher_assignments` DISABLE KEYS */;
+/*!40000 ALTER TABLE `teacher_assignments` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `users`
 --
 
+DROP TABLE IF EXISTS `users`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `users` (
-  `id` int(10) UNSIGNED NOT NULL,
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(100) NOT NULL,
   `email` varchar(150) NOT NULL,
   `password` varchar(255) NOT NULL,
@@ -169,248 +331,35 @@ CREATE TABLE `users` (
   `department` varchar(100) DEFAULT NULL,
   `last_login_at` datetime DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `system_settings`
---
-
-CREATE TABLE `system_settings` (
-  `setting_key` varchar(80) NOT NULL,
-  `setting_value` text DEFAULT NULL,
-  `updated_by` int(10) unsigned DEFAULT NULL,
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- --------------------------------------------------------
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_users_email` (`email`),
+  KEY `idx_users_role` (`role`),
+  KEY `idx_users_status` (`status`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Seed credentials (change passwords immediately after first login)
--- ADMIN: daylinda.lim@deped.gov.ph / Dayline_191604
--- ADMIN (name login): DAYLINDA E. LIM / Dayline_191604
--- RECORD_OFFICER: cindy.catindoy@deped.gov.ph / sped124260
--- RECORD_OFFICER (name login): ccatindoy / sped124260
+-- Dumping data for table `users`
 --
 
-INSERT INTO `users` (`id`, `name`, `email`, `password`, `role`, `status`, `department`, `last_login_at`, `created_at`, `updated_at`) VALUES
-(1, 'DAYLINDA E. LIM', 'daylinda.lim@deped.gov.ph', '$2y$10$SJY4F5XjVeqKAxgUGSvPG.m5y/23v.N0ov1azk7ycCQHF4/wtJ.Pm', 'ADMIN', 'ACTIVE', 'Administration', NULL, current_timestamp(), current_timestamp()),
-(2, 'ccatindoy', 'cindy.catindoy@deped.gov.ph', '$2y$10$R1r87017eshbrMM4tLkniubx/ySx8g0GLtoTTTLfVhf.dSM9LTpei', 'RECORD_OFFICER', 'ACTIVE', 'SPED', NULL, current_timestamp(), current_timestamp());
+LOCK TABLES `users` WRITE;
+/*!40000 ALTER TABLE `users` DISABLE KEYS */;
+INSERT INTO `users` VALUES (1,'DAYLINDA E. LIM','daylinda.lim@deped.gov.ph','$2y$10$i7wNieORKINPdP1BZJ2IHuSb1BfRe8.fkGeoE3tqnmzzwQ8eAnodC','ADMIN','ACTIVE','Administration',NULL,'2026-02-27 06:02:03','2026-02-27 06:02:03'),(2,'ccatindoy','cindy.catindoy@deped.gov.ph','$2y$10$U2TI1cfGGxp58qOxJY2rFOPozm8HR0/.MqZDha3mxqqBRVwp5Cjp6','RECORD_OFFICER','ACTIVE','Records',NULL,'2026-02-27 06:02:03','2026-02-27 06:02:03');
+/*!40000 ALTER TABLE `users` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
--- Indexes for dumped tables
+-- Dumping routines for database 'archivia_db'
 --
+/*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
---
--- Indexes for table `documents`
---
-ALTER TABLE `documents`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `uq_documents_group_version` (`document_group_id`,`version_number`),
-  ADD KEY `idx_documents_student_id` (`student_id`),
-  ADD KEY `idx_documents_document_group_id` (`document_group_id`),
-  ADD KEY `idx_documents_is_current` (`is_current`),
-  ADD KEY `idx_documents_created_at` (`created_at`),
-  ADD KEY `idx_documents_uploaded_by` (`uploaded_by`),
-  ADD KEY `idx_documents_deleted_at` (`deleted_at`),
-  ADD KEY `idx_documents_student_current` (`student_id`,`is_current`);
-
---
--- Indexes for table `document_groups`
---
-ALTER TABLE `document_groups`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_document_groups_student_id` (`student_id`);
-
---
--- Indexes for table `logs`
---
-ALTER TABLE `logs`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_logs_user_id` (`user_id`),
-  ADD KEY `idx_logs_entity_type` (`entity_type`),
-  ADD KEY `idx_logs_created_at` (`created_at`),
-  ADD KEY `idx_logs_entity_lookup` (`entity_type`,`entity_id`,`created_at`);
-
---
--- Indexes for table `login_attempts`
---
-ALTER TABLE `login_attempts`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `uq_login_attempts_key_ip` (`login_key`,`ip_address`),
-  ADD KEY `idx_login_attempts_last_attempt` (`last_attempt_ts`),
-  ADD KEY `idx_login_attempts_blocked_until` (`blocked_until_ts`);
-
---
--- Indexes for table `organization_chart_members`
---
-ALTER TABLE `organization_chart_members`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_org_chart_active_sort` (`is_active`,`sort_order`,`id`),
-  ADD KEY `idx_org_chart_created_by` (`created_by`);
-
---
--- Indexes for table `students`
---
-ALTER TABLE `students`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `uq_students_student_id` (`student_id`),
-  ADD KEY `idx_students_batch_year` (`batch_year`),
-  ADD KEY `idx_students_last_name` (`last_name`),
-  ADD KEY `idx_students_deleted_at` (`deleted_at`),
-  ADD KEY `idx_students_search` (`last_name`,`first_name`,`batch_year`);
-ALTER TABLE `students` ADD FULLTEXT KEY `ftx_students_name` (`first_name`,`last_name`);
-
---
--- Indexes for table `system_backups`
---
-ALTER TABLE `system_backups`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_system_backups_created_by` (`created_by`),
-  ADD KEY `idx_system_backups_created_at` (`created_at`);
-
---
--- Indexes for table `teacher_assignments`
---
-ALTER TABLE `teacher_assignments`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `uq_teacher_assignments_teacher_student` (`teacher_id`,`student_id`),
-  ADD KEY `idx_teacher_assignments_teacher_id` (`teacher_id`),
-  ADD KEY `idx_teacher_assignments_student_id` (`student_id`);
-
---
--- Indexes for table `users`
---
-ALTER TABLE `users`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `uq_users_email` (`email`),
-  ADD KEY `idx_users_role` (`role`),
-  ADD KEY `idx_users_status` (`status`);
-
---
--- Indexes for table `system_settings`
---
-ALTER TABLE `system_settings`
-  ADD PRIMARY KEY (`setting_key`),
-  ADD KEY `idx_system_settings_updated_by` (`updated_by`);
-
---
--- AUTO_INCREMENT for dumped tables
---
-
---
--- AUTO_INCREMENT for table `documents`
---
-ALTER TABLE `documents`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `document_groups`
---
-ALTER TABLE `document_groups`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `logs`
---
-ALTER TABLE `logs`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `login_attempts`
---
-ALTER TABLE `login_attempts`
-  MODIFY `id` int(10) unsigned NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `organization_chart_members`
---
-ALTER TABLE `organization_chart_members`
-  MODIFY `id` int(10) unsigned NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `students`
---
-ALTER TABLE `students`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `system_backups`
---
-ALTER TABLE `system_backups`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `teacher_assignments`
---
-ALTER TABLE `teacher_assignments`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `users`
---
-ALTER TABLE `users`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- Constraints for dumped tables
---
-
---
--- Constraints for table `documents`
---
-ALTER TABLE `documents`
-  ADD CONSTRAINT `fk_documents_group` FOREIGN KEY (`document_group_id`) REFERENCES `document_groups` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `fk_documents_student` FOREIGN KEY (`student_id`) REFERENCES `students` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `fk_documents_uploaded_by` FOREIGN KEY (`uploaded_by`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
-
---
--- Constraints for table `document_groups`
---
-ALTER TABLE `document_groups`
-  ADD CONSTRAINT `fk_document_groups_student` FOREIGN KEY (`student_id`) REFERENCES `students` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
-
---
--- Constraints for table `logs`
---
-ALTER TABLE `logs`
-  ADD CONSTRAINT `fk_logs_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
-
---
--- Constraints for table `organization_chart_members`
---
-ALTER TABLE `organization_chart_members`
-  ADD CONSTRAINT `fk_org_chart_created_by` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
-
---
--- Constraints for table `system_backups`
---
-ALTER TABLE `system_backups`
-  ADD CONSTRAINT `fk_system_backups_created_by` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
-
---
--- Constraints for table `system_settings`
---
-ALTER TABLE `system_settings`
-  ADD CONSTRAINT `fk_system_settings_updated_by` FOREIGN KEY (`updated_by`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
-
---
--- Constraints for table `teacher_assignments`
---
-ALTER TABLE `teacher_assignments`
-  ADD CONSTRAINT `fk_teacher_assignments_student` FOREIGN KEY (`student_id`) REFERENCES `students` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `fk_teacher_assignments_teacher` FOREIGN KEY (`teacher_id`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
-COMMIT;
-
+/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
+/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
+/*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Post-creation migrations (run once on an existing DB)
--- ALTER TABLE students MODIFY COLUMN sex ENUM('MALE','FEMALE') NOT NULL;
--- UPDATE students SET sex = UPPER(sex) WHERE sex IN ('Male','Female','MALE','FEMALE');
--- ALTER TABLE users MODIFY COLUMN role ENUM('ADMIN','RECORD_OFFICER') NOT NULL;
--- UPDATE users SET role = 'RECORD_OFFICER' WHERE role = 'TEACHER';
--- ALTER TABLE users ADD COLUMN department VARCHAR(100) NULL AFTER status;
+-- Dump completed on 2026-03-01  0:08:53
