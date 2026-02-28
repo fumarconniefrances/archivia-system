@@ -3,6 +3,7 @@ document.addEventListener('DOMContentLoaded', async function () {
   var id = Number(query.get('id')) || 0;
   var currentRole = window.ArchiviaUI.getCurrentRole ? window.ArchiviaUI.getCurrentRole() : '';
   var activeDoc = null;
+  var adviserDirectory = [];
 
   function getDocPreviewUrl(docId) {
     if (window.ArchiviaApi && typeof window.ArchiviaApi.getDocumentPreviewUrl === 'function') {
@@ -73,6 +74,13 @@ document.addEventListener('DOMContentLoaded', async function () {
       var docsAll = await window.ArchiviaApi.withRetry(function () {
         return window.ArchiviaApi.getDocuments();
       }, 1);
+      try {
+        adviserDirectory = await window.ArchiviaApi.withRetry(function () {
+          return window.ArchiviaApi.getTeachers();
+        }, 1);
+      } catch (_adviserError) {
+        adviserDirectory = [];
+      }
 
       if (!students.length) {
         window.ArchiviaUI.renderMetricCards('#profileSummary', [
@@ -173,38 +181,71 @@ document.addEventListener('DOMContentLoaded', async function () {
       }
 
       document.getElementById('editProfileBtn').onclick = function () {
-        document.getElementById('profileFirstName').value = student.firstName;
-        document.getElementById('profileLastName').value = student.lastName;
+        var adviserSuggestions = document.getElementById('profileAdviserSuggestions');
+        if (adviserSuggestions) {
+          adviserSuggestions.innerHTML = '';
+          adviserDirectory.forEach(function (teacher) {
+            var opt = document.createElement('option');
+            opt.value = teacher.name || '';
+            adviserSuggestions.appendChild(opt);
+          });
+        }
+        document.getElementById('profileStudentId').value = student.studentId || '';
+        document.getElementById('profileFullName').value = [student.firstName, student.lastName].filter(Boolean).join(' ');
+        document.getElementById('profileSection').value = student.section || '';
+        document.getElementById('profileSex').value = String(student.sex || '').toUpperCase();
         document.getElementById('profileBatchYear').value = formatSchoolYear(student.batchYear);
         document.getElementById('profileGradeLevel').value = student.gradeLevel;
+        document.getElementById('profileAdviser').value = student.adviserName || '';
         window.ArchiviaUI.openModal('#editProfileModal');
       };
 
       document.getElementById('saveProfileBtn').onclick = function () {
-        var firstNameInput = document.getElementById('profileFirstName');
-        var lastNameInput = document.getElementById('profileLastName');
+        var studentIdInput = document.getElementById('profileStudentId');
+        var fullNameInput = document.getElementById('profileFullName');
+        var sectionInput = document.getElementById('profileSection');
+        var sexInput = document.getElementById('profileSex');
         var batchYearInput = document.getElementById('profileBatchYear');
         var gradeLevelInput = document.getElementById('profileGradeLevel');
+        var adviserInput = document.getElementById('profileAdviser');
 
-        var firstName = firstNameInput ? firstNameInput.value.trim() : '';
-        var lastName = lastNameInput ? lastNameInput.value.trim() : '';
+        var studentIdValue = studentIdInput ? studentIdInput.value.trim() : '';
+        var fullName = fullNameInput ? fullNameInput.value.trim() : '';
+        var section = sectionInput ? sectionInput.value.trim() : '';
+        var sex = sexInput ? String(sexInput.value || '').toUpperCase() : '';
         var parsedYear = parseSchoolYearToStartYear(batchYearInput ? batchYearInput.value : '');
         var gradeLevel = gradeLevelInput ? gradeLevelInput.value.trim() : '';
+        var adviserName = adviserInput ? adviserInput.value.trim() : '';
+        var nameParts = fullName.split(' ').filter(Boolean);
+        var firstName = nameParts.shift() || '';
+        var lastName = nameParts.join(' ');
+        var matchedAdviser = adviserName ? adviserDirectory.find(function (t) {
+          var name = String(t.name || '').trim().toLowerCase();
+          var email = String(t.email || '').trim().toLowerCase();
+          var input = adviserName.toLowerCase();
+          return name === input || email === input;
+        }) : null;
 
-        if (!firstName || !lastName || !gradeLevel || parsedYear < 1988) {
+        if (!studentIdValue || !firstName || !lastName || !gradeLevel || !section || !sex || parsedYear < 1988) {
           window.ArchiviaUI.showToast('Please provide valid profile details.');
+          return;
+        }
+        if (adviserName && !matchedAdviser) {
+          window.ArchiviaUI.showToast('Adviser not found. Please type an existing teacher name.');
           return;
         }
 
         window.ArchiviaApi.updateStudent({
           id: student.id,
-          student_id: student.studentId,
+          student_id: studentIdValue,
           first_name: firstName,
           last_name: lastName,
-          sex: String(student.sex || '').toUpperCase(),
+          sex: sex,
           batch_year: parsedYear,
           grade_level: gradeLevel,
-          section: student.section || ''
+          section: section,
+          adviser_id: matchedAdviser ? Number(matchedAdviser.id) : null,
+          adviser_name: adviserName || null
         }).then(function () {
           window.ArchiviaUI.closeModal('#editProfileModal');
           window.ArchiviaUI.showToast('Profile changes saved to database.');
