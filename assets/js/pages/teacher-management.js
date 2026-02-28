@@ -21,7 +21,8 @@ document.addEventListener('DOMContentLoaded', async function () {
   var teacherDepartmentInput = document.getElementById('teacherDepartment');
 
   function photoCell(name, teacherId, fallback) {
-    var photo = window.ArchiviaUI.getTeacherPhoto(teacherId, fallback);
+    var teacher = all.find(function (t) { return t.id === teacherId; });
+    var photo = (teacher && teacher.photoData) ? teacher.photoData : fallback;
     return window.ArchiviaUI.createPersonCell(name, photo, false);
   }
 
@@ -42,7 +43,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     root.innerHTML = '';
     var wrap = window.ArchiviaUI.createElement('div', 'person-cell');
-    var photo = window.ArchiviaUI.getTeacherPhoto(teacher.id, '');
+    var photo = teacher.photoData || '';
     wrap.appendChild(window.ArchiviaUI.createPhotoVisual(photo, teacher.name, true));
     var content = window.ArchiviaUI.createElement('div');
     var nameLine = window.ArchiviaUI.createElement('p');
@@ -158,21 +159,33 @@ document.addEventListener('DOMContentLoaded', async function () {
       return;
     }
     var reader = new FileReader();
-    reader.onload = function (e) {
-      window.ArchiviaUI.setTeacherPhoto(selectedTeacherId, e.target.result);
-      window.ArchiviaUI.showToast('Teacher photo uploaded.');
-      renderTeacherPhotoPreview();
-      draw();
+    reader.onload = async function (e) {
+      try {
+        await window.ArchiviaApi.saveProfilePhoto('user', selectedTeacherId, e.target.result);
+        var target = all.find(function (t) { return t.id === selectedTeacherId; });
+        if (target) target.photoData = e.target.result;
+        window.ArchiviaUI.showToast('Teacher photo uploaded.');
+        renderTeacherPhotoPreview();
+        draw();
+      } catch (error) {
+        window.ArchiviaUI.showToast(error.message || 'Failed to save teacher photo.');
+      }
     };
     reader.readAsDataURL(file);
   });
 
-  document.getElementById('removeTeacherPhotoBtn').addEventListener('click', function () {
+  document.getElementById('removeTeacherPhotoBtn').addEventListener('click', async function () {
     if (!selectedTeacherId) return;
-    window.ArchiviaUI.clearTeacherPhoto(selectedTeacherId);
-    window.ArchiviaUI.showToast('Teacher photo removed.');
-    renderTeacherPhotoPreview();
-    draw();
+    try {
+      await window.ArchiviaApi.clearProfilePhoto('user', selectedTeacherId);
+      var target = all.find(function (t) { return t.id === selectedTeacherId; });
+      if (target) target.photoData = '';
+      window.ArchiviaUI.showToast('Teacher photo removed.');
+      renderTeacherPhotoPreview();
+      draw();
+    } catch (error) {
+      window.ArchiviaUI.showToast(error.message || 'Failed to remove teacher photo.');
+    }
   });
 
   await load();

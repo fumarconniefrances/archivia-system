@@ -68,7 +68,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         key: 'firstName',
         render: function (row) {
           var fullName = [row.firstName, row.lastName].filter(Boolean).join(' ');
-          var photo = window.ArchiviaUI.getStudentPhoto(row.id, '');
+          var photo = row.photoData || '';
           return window.ArchiviaUI.createPersonCell(fullName, photo, false);
         }
       },

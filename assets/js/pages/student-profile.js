@@ -4,6 +4,24 @@ document.addEventListener('DOMContentLoaded', async function () {
   var currentRole = window.ArchiviaUI.getCurrentRole ? window.ArchiviaUI.getCurrentRole() : '';
   var activeDoc = null;
 
+  function splitFullName(fullName) {
+    var raw = String(fullName || '').trim();
+    if (!raw) return null;
+    if (raw.includes(',')) {
+      var partsByComma = raw.split(',');
+      var last = String(partsByComma[0] || '').trim();
+      var first = String(partsByComma.slice(1).join(' ') || '').trim();
+      if (!first || !last) return null;
+      return { firstName: first, lastName: last };
+    }
+    var parts = raw.split(/\s+/).filter(Boolean);
+    if (parts.length < 2) return null;
+    return {
+      firstName: parts.shift(),
+      lastName: parts.join(' ')
+    };
+  }
+
   function getDocPreviewUrl(docId) {
     if (window.ArchiviaApi && typeof window.ArchiviaApi.getDocumentPreviewUrl === 'function') {
       return window.ArchiviaApi.getDocumentPreviewUrl(docId);
@@ -23,7 +41,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     profileCard.innerHTML = '';
 
     var fullName = [student.firstName, student.lastName].filter(Boolean).join(' ');
-    var photo = window.ArchiviaUI.getStudentPhoto(student.id, '');
+    var photo = student.photoData || '';
     profileCard.appendChild(window.ArchiviaUI.createPhotoVisual(photo, fullName, true));
     profileCard.appendChild(window.ArchiviaUI.createElement('h2', 'table-top-gap', fullName));
     profileCard.appendChild(window.ArchiviaUI.createElement('p', 'muted', student.studentId));
@@ -199,9 +217,13 @@ document.addEventListener('DOMContentLoaded', async function () {
         var parsedYear = parseSchoolYearToStartYear(batchYearInput ? batchYearInput.value : '');
         var gradeLevel = gradeLevelInput ? gradeLevelInput.value.trim() : '';
         var adviserName = adviserInput ? adviserInput.value.trim() : '';
-        var nameParts = fullName.split(' ').filter(Boolean);
-        var firstName = nameParts.shift() || '';
-        var lastName = nameParts.join(' ');
+        var splitName = splitFullName(fullName);
+        if (!splitName) {
+          window.ArchiviaUI.showToast('Full Name must include first and last name.');
+          return;
+        }
+        var firstName = splitName.firstName;
+        var lastName = splitName.lastName;
 
         if (!studentIdValue || !firstName || !lastName || !gradeLevel || !section || !sex || parsedYear < 1988) {
           window.ArchiviaUI.showToast('Please provide valid profile details.');
@@ -272,18 +294,26 @@ document.addEventListener('DOMContentLoaded', async function () {
           return;
         }
         var reader = new FileReader();
-        reader.onload = function (e) {
-          window.ArchiviaUI.setStudentPhoto(student.id, e.target.result);
-          window.ArchiviaUI.showToast('Student photo uploaded.');
-          load();
+        reader.onload = async function (e) {
+          try {
+            await window.ArchiviaApi.saveProfilePhoto('student', student.id, e.target.result);
+            window.ArchiviaUI.showToast('Student photo uploaded.');
+            await load();
+          } catch (error) {
+            window.ArchiviaUI.showToast(error.message || 'Failed to save student photo.');
+          }
         };
         reader.readAsDataURL(file);
       };
 
-      document.getElementById('removeStudentPhotoBtn').onclick = function () {
-        window.ArchiviaUI.clearStudentPhoto(student.id);
-        window.ArchiviaUI.showToast('Student photo removed.');
-        load();
+      document.getElementById('removeStudentPhotoBtn').onclick = async function () {
+        try {
+          await window.ArchiviaApi.clearProfilePhoto('student', student.id);
+          window.ArchiviaUI.showToast('Student photo removed.');
+          await load();
+        } catch (error) {
+          window.ArchiviaUI.showToast(error.message || 'Failed to remove student photo.');
+        }
       };
     } catch (error) {
       window.ArchiviaUI.showPageError(error.message, load);

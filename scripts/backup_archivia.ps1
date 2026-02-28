@@ -5,6 +5,7 @@ param(
   [string]$Password = "",
   [string]$LocalDir = "C:\\ARCHIVIA_BACKUPS\\LOCAL",
   [string]$ExternalDir = "D:\\ARCHIVIA_BACKUPS",
+  [string]$UploadsDir = "C:\\xampp\\htdocs\\ARCHIVA\\storage\\uploads",
   [string]$ExternalDriveLabel = "My Passport",
   [string]$LogFile = "C:\\ARCHIVIA_BACKUPS\\backup_log.txt",
   [int]$WindowStartHour = 8,
@@ -104,6 +105,7 @@ if (-not $windowCheck.InWindow) {
 
 $timestamp = Get-Date -Format "yyyyMMdd_HHmmss"
 $backupFile = Join-Path $LocalDir ("archivia_backup_{0}.sql" -f $timestamp)
+$uploadsZip = Join-Path $LocalDir ("archivia_uploads_{0}.zip" -f $timestamp)
 
 $passArg = ""
 if ($Password -ne "") {
@@ -114,7 +116,24 @@ if ($Password -ne "") {
   Out-File -FilePath $backupFile -Encoding utf8
 
 if ($LASTEXITCODE -eq 0 -and (Test-Path -LiteralPath $backupFile)) {
+  if (-not (Test-Path -LiteralPath $UploadsDir)) {
+    Write-BackupLog ("Uploads backup FAILED: directory not found: {0}" -f $UploadsDir)
+    Write-Error "Uploads directory not found: $UploadsDir"
+    exit 1
+  }
+
+  if (Test-Path -LiteralPath $uploadsZip) {
+    Remove-Item -LiteralPath $uploadsZip -Force
+  }
+  Compress-Archive -Path $UploadsDir -DestinationPath $uploadsZip -Force
+  if (-not (Test-Path -LiteralPath $uploadsZip)) {
+    Write-BackupLog "Uploads archive FAILED"
+    Write-Error "Uploads archive failed."
+    exit 1
+  }
+
   Write-BackupLog ("Backup SUCCESS: {0}" -f $backupFile)
+  Write-BackupLog ("Uploads archive SUCCESS: {0}" -f $uploadsZip)
 
   $externalCheck = Test-ExternalBackupTarget -TargetDir $ExternalDir -ExpectedLabel $ExternalDriveLabel
   if (-not $externalCheck.IsValid) {
@@ -128,6 +147,7 @@ if ($LASTEXITCODE -eq 0 -and (Test-Path -LiteralPath $backupFile)) {
   }
 
   Copy-Item -Path $backupFile -Destination $ExternalDir -Force
+  Copy-Item -Path $uploadsZip -Destination $ExternalDir -Force
   Write-BackupLog "External copy SUCCESS"
 
   if ($ZipWeekly -and (Get-Date).DayOfWeek -eq 'Sunday') {

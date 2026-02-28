@@ -202,6 +202,7 @@ CREATE TABLE `students` (
   `grade_level` varchar(50) DEFAULT NULL,
   `section` varchar(50) DEFAULT NULL,
   `adviser_name` varchar(100) DEFAULT NULL,
+  `photo_data` varchar(255) DEFAULT NULL,
   `disability_type` varchar(100) DEFAULT NULL,
   `status` enum('ACTIVE','ARCHIVED') NOT NULL DEFAULT 'ACTIVE',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
@@ -224,7 +225,7 @@ CREATE TABLE `students` (
 
 LOCK TABLES `students` WRITE;
 /*!40000 ALTER TABLE `students` DISABLE KEYS */;
-INSERT INTO `students` VALUES (1,'TMP-SMOKE-20260227142904','Temp','SmokeTest','MALE',2026,'Grade 1','A',NULL,NULL,'ACTIVE','2026-02-27 06:29:04','2026-02-27 06:29:04','2026-02-27 14:29:04'),(2,'LONG-TEST-001','AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA','Tester','MALE',2026,'G1','A',NULL,NULL,'ACTIVE','2026-02-27 08:31:11','2026-02-27 08:31:11',NULL),(3,'19004563700','Connie','Frances Fumar','MALE',2026,'Grade 2','Love Joy Hope',NULL,NULL,'ACTIVE','2026-02-27 08:33:06','2026-02-27 08:33:06',NULL);
+INSERT INTO `students` VALUES (1,'TMP-SMOKE-20260227142904','Temp','SmokeTest','MALE',2026,'Grade 1','A',NULL,NULL,NULL,'ACTIVE','2026-02-27 06:29:04','2026-02-27 06:29:04','2026-02-27 14:29:04'),(2,'LONG-TEST-001','AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA','Tester','MALE',2026,'G1','A',NULL,NULL,NULL,'ACTIVE','2026-02-27 08:31:11','2026-02-27 08:31:11',NULL),(3,'19004563700','Connie','Frances Fumar','MALE',2026,'Grade 2','Love Joy Hope',NULL,NULL,NULL,'ACTIVE','2026-02-27 08:33:06','2026-02-27 08:33:06',NULL);
 /*!40000 ALTER TABLE `students` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -330,6 +331,7 @@ CREATE TABLE `users` (
   `role` enum('ADMIN','RECORD_OFFICER') NOT NULL,
   `status` enum('ACTIVE','DISABLED') NOT NULL DEFAULT 'ACTIVE',
   `department` varchar(100) DEFAULT NULL,
+  `photo_data` varchar(255) DEFAULT NULL,
   `last_login_at` datetime DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
@@ -346,7 +348,7 @@ CREATE TABLE `users` (
 
 LOCK TABLES `users` WRITE;
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
-INSERT INTO `users` VALUES (1,'DAYLINDA E. LIM','daylinda.lim@deped.gov.ph','$2y$10$i7wNieORKINPdP1BZJ2IHuSb1BfRe8.fkGeoE3tqnmzzwQ8eAnodC','ADMIN','ACTIVE','Administration',NULL,'2026-02-27 06:02:03','2026-02-27 06:02:03'),(2,'ccatindoy','cindy.catindoy@deped.gov.ph','$2y$10$U2TI1cfGGxp58qOxJY2rFOPozm8HR0/.MqZDha3mxqqBRVwp5Cjp6','RECORD_OFFICER','ACTIVE','Records',NULL,'2026-02-27 06:02:03','2026-02-27 06:02:03');
+INSERT INTO `users` VALUES (1,'DAYLINDA E. LIM','daylinda.lim@deped.gov.ph','$2y$10$i7wNieORKINPdP1BZJ2IHuSb1BfRe8.fkGeoE3tqnmzzwQ8eAnodC','ADMIN','ACTIVE','Administration',NULL,NULL,'2026-02-27 06:02:03','2026-02-27 06:02:03'),(2,'ccatindoy','cindy.catindoy@deped.gov.ph','$2y$10$U2TI1cfGGxp58qOxJY2rFOPozm8HR0/.MqZDha3mxqqBRVwp5Cjp6','RECORD_OFFICER','ACTIVE','Records',NULL,NULL,'2026-02-27 06:02:03','2026-02-27 06:02:03');
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
 

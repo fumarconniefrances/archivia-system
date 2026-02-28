@@ -107,6 +107,8 @@
     var src = String(value).trim();
     if (src.startsWith('data:image/')) return src;
     if (src.startsWith('http://') || src.startsWith('https://')) return src;
+    if (src.startsWith('/')) return src;
+    if (src.startsWith('api/')) return src;
     if (src.startsWith('assets/')) return src;
     return '';
   }

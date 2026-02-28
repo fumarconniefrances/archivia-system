@@ -103,7 +103,7 @@ if ($action === 'login' && $_SERVER['REQUEST_METHOD'] === 'POST') {
 
   $departmentSelect = users_has_department_column($pdo) ? 'department' : "'' AS department";
   $stmt = $pdo->prepare("
-    SELECT id, name, email, password, role, status, {$departmentSelect}
+    SELECT id, name, email, password, role, status, {$departmentSelect}, photo_data
     FROM users
     WHERE email = :login_email OR name = :login_name
     LIMIT 1
@@ -137,7 +137,8 @@ if ($action === 'login' && $_SERVER['REQUEST_METHOD'] === 'POST') {
       'name' => $user['name'],
       'email' => $user['email'],
       'role' => $user['role'],
-      'department' => $user['department'] ?? ''
+      'department' => $user['department'] ?? '',
+      'photo_data' => $user['photo_data'] ?? null
     ]
   ]);
 }
@@ -161,7 +162,7 @@ if ($action === 'me' && $_SERVER['REQUEST_METHOD'] === 'GET') {
     error_response('Unauthorized', 401);
   }
   $departmentSelect = users_has_department_column($pdo) ? 'department' : "'' AS department";
-  $stmt = $pdo->prepare("SELECT id, name, email, role, {$departmentSelect} FROM users WHERE id = :id LIMIT 1");
+  $stmt = $pdo->prepare("SELECT id, name, email, role, {$departmentSelect}, photo_data FROM users WHERE id = :id LIMIT 1");
   $stmt->execute([':id' => $_SESSION['user_id']]);
   $user = $stmt->fetch();
   if (!$user) error_response('Unauthorized', 401);

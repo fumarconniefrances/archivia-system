@@ -54,7 +54,7 @@ if ($method === 'GET') {
     $countStmt->execute();
     $total = (int)($countStmt->fetch()['total'] ?? 0);
 
-    $sql = 'SELECT id, student_id, first_name, last_name, sex, batch_year, grade_level, section, adviser_name, created_at
+    $sql = 'SELECT id, student_id, first_name, last_name, sex, batch_year, grade_level, section, adviser_name, photo_data, created_at
             FROM students WHERE ' . implode(' AND ', $where) . ' ORDER BY last_name ASC, first_name ASC
             LIMIT ? OFFSET ?';
     $stmt = $pdo->prepare($sql);
@@ -247,7 +247,7 @@ if ($method === 'DELETE') {
   $existing = $stmt->fetch();
   if (!$existing) error_response('Student not found.', 404);
 
-  $stmt = $pdo->prepare('UPDATE students SET deleted_at = NOW() WHERE id = :id');
+  $stmt = $pdo->prepare('UPDATE students SET status = "ARCHIVED", deleted_at = NOW() WHERE id = :id');
   $stmt->execute([':id' => $id]);
   log_action($pdo, $_SESSION['user_id'], 'delete', 'STUDENT', $id, $existing, null);
   json_response(['success' => true, 'data' => true]);

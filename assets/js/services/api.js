@@ -14,11 +14,28 @@
   const API_BASE = resolveApiBase();
   let csrfToken = null;
 
+  function normalizeProfilePhoto(target, id, value) {
+    const raw = String(value || '').trim();
+    if (!raw) return '';
+    if (raw.startsWith('data:image/')) return raw;
+    if (raw.startsWith('http://') || raw.startsWith('https://')) return raw;
+    if (raw.startsWith('assets/')) return raw;
+    if (raw.startsWith('storage/uploads/')) {
+      return API_BASE + '/profile-photos.php?action=view&target=' + encodeURIComponent(target) + '&id=' + encodeURIComponent(id);
+    }
+    return '';
+  }
+
   function normalizeError(payload, fallbackStatus) {
     if (!payload || typeof payload !== 'object') {
       return new Error('Request failed');
     }
-    const message = payload.message || 'Request failed';
+    let message = payload.message || 'Request failed';
+    if (message === 'Validation failed.' && payload.errors && typeof payload.errors === 'object') {
+      const firstKey = Object.keys(payload.errors)[0];
+      const detail = firstKey ? payload.errors[firstKey] : '';
+      if (detail) message = String(detail);
+    }
     const error = new Error(message);
     error.code = payload.code || 'REQUEST_ERROR';
     error.status = fallbackStatus || 400;
@@ -104,6 +121,7 @@
       gradeLevel: item.grade_level || item.gradeLevel || 'N/A',
       section: item.section || 'N/A',
       adviserName: item.adviser_name || item.adviserName || '',
+      photoData: normalizeProfilePhoto('student', Number(item.id), item.photo_data || item.photoData || ''),
       createdAt: item.created_at || item.createdAt || null
     };
   }
@@ -128,6 +146,7 @@
       email: item.email || '',
       role: item.role || '',
       department: item.department || '',
+      photoData: normalizeProfilePhoto('user', Number(item.id), item.photo_data || item.photoData || ''),
       createdAt: item.created_at || item.createdAt || null
     };
   }
@@ -248,6 +267,22 @@
     },
     addTeacher(payload) {
       return http('/teachers.php', { method: 'POST', body: payload });
+    },
+    getProfilePhoto(target, id) {
+      const query = new URLSearchParams({ target, id: String(id) }).toString();
+      return http('/profile-photos.php?' + query).then(item => item && item.photo_data ? item.photo_data : '');
+    },
+    saveProfilePhoto(target, id, photoData) {
+      return http('/profile-photos.php', {
+        method: 'PUT',
+        body: { target, id, photo_data: photoData }
+      });
+    },
+    clearProfilePhoto(target, id) {
+      return http('/profile-photos.php', {
+        method: 'DELETE',
+        body: { target, id }
+      });
     },
     getLogs(params) {
       const query = params ? new URLSearchParams(params).toString() : '';

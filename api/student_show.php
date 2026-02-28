@@ -20,6 +20,7 @@ $stmt = $pdo->prepare('
     s.batch_year,
     s.grade_level,
     s.section,
+    s.photo_data,
     s.created_at,
     COALESCE(s.adviser_name, "") AS adviser_name
   FROM students s

@@ -22,6 +22,24 @@ document.addEventListener('DOMContentLoaded', async function () {
   var activeYearStudents = [];
   var yearsSet = new Set();
 
+  function splitFullName(fullName) {
+    var raw = String(fullName || '').trim();
+    if (!raw) return null;
+    if (raw.includes(',')) {
+      var partsByComma = raw.split(',');
+      var last = String(partsByComma[0] || '').trim();
+      var first = String(partsByComma.slice(1).join(' ') || '').trim();
+      if (!first || !last) return null;
+      return { firstName: first, lastName: last };
+    }
+    var parts = raw.split(/\s+/).filter(Boolean);
+    if (parts.length < 2) return null;
+    return {
+      firstName: parts.shift(),
+      lastName: parts.join(' ')
+    };
+  }
+
   function createDocumentInputRow() {
     var row = document.createElement('div');
     row.className = 'form-field';
@@ -141,7 +159,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         key: 'firstName',
         render: function (row) {
           var fullName = [row.firstName, row.lastName].filter(Boolean).join(' ');
-          var photo = window.ArchiviaUI.getStudentPhoto(row.id, '');
+          var photo = row.photoData || '';
           return window.ArchiviaUI.createPersonCell(fullName, photo, false);
         }
       },
@@ -322,9 +340,13 @@ document.addEventListener('DOMContentLoaded', async function () {
         return;
       }
 
-      var nameParts = fullName.split(' ').filter(Boolean);
-      var firstName = nameParts.shift() || '';
-      var lastName = nameParts.join(' ');
+      var splitName = splitFullName(fullName);
+      if (!splitName) {
+        window.ArchiviaUI.showToast('Full Name must include first and last name.');
+        return;
+      }
+      var firstName = splitName.firstName;
+      var lastName = splitName.lastName;
 
       try {
         var created = await window.ArchiviaApi.withRetry(function () {
