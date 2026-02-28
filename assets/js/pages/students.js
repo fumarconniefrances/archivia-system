@@ -11,8 +11,6 @@ document.addEventListener('DOMContentLoaded', async function () {
   var studentSexInput = document.getElementById('studentSex');
   var studentSchoolYearInput = document.getElementById('studentSchoolYear');
   var studentAdviserInput = document.getElementById('studentAdviser');
-  var adviserSuggestions = document.getElementById('adviserSuggestions');
-  var advisers = [];
   var studentDocumentsList = document.getElementById('studentDocumentsList');
   var addStudentDocFieldBtn = document.getElementById('addStudentDocFieldBtn');
   var schoolYearSection = document.getElementById('schoolYearSection');
@@ -24,36 +22,50 @@ document.addEventListener('DOMContentLoaded', async function () {
   var activeYearStudents = [];
   var yearsSet = new Set();
 
-  function createDocumentInputRow(withRemove) {
+  function createDocumentInputRow() {
     var row = document.createElement('div');
-    row.className = 'form-field doc-row-inline';
+    row.className = 'form-field';
     row.setAttribute('data-doc-row', '1');
+
+    var wrap = document.createElement('div');
+    wrap.className = 'doc-input-wrap';
 
     var input = document.createElement('input');
     input.className = 'input student-doc-input';
     input.type = 'file';
     input.accept = 'image/*,application/pdf,.docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document';
-    row.appendChild(input);
+    wrap.appendChild(input);
 
-    if (withRemove) {
-      var removeBtn = document.createElement('button');
-      removeBtn.type = 'button';
-      removeBtn.className = 'btn btn-secondary doc-remove-btn';
-      removeBtn.textContent = 'X';
-      removeBtn.setAttribute('aria-label', 'Remove document field');
-      removeBtn.title = 'Remove document field';
-      removeBtn.addEventListener('click', function () {
-        row.remove();
-      });
-      row.appendChild(removeBtn);
-    }
+    var removeBtn = document.createElement('button');
+    removeBtn.type = 'button';
+    removeBtn.className = 'doc-remove-btn hidden';
+    removeBtn.textContent = 'X';
+    removeBtn.setAttribute('aria-label', 'Remove document field');
+    removeBtn.title = 'Remove document field';
+    input.addEventListener('change', function () {
+      var hasFile = !!(input.files && input.files.length);
+      removeBtn.classList.toggle('hidden', !hasFile);
+    });
+    removeBtn.addEventListener('click', function () {
+      if (!studentDocumentsList) return;
+      var rows = studentDocumentsList.querySelectorAll('[data-doc-row]');
+      if (rows.length <= 1) {
+        input.value = '';
+        removeBtn.classList.add('hidden');
+        return;
+      }
+      row.remove();
+    });
+    wrap.appendChild(removeBtn);
+
+    row.appendChild(wrap);
     return row;
   }
 
   function resetStudentDocumentRows() {
     if (!studentDocumentsList) return;
     studentDocumentsList.innerHTML = '';
-    studentDocumentsList.appendChild(createDocumentInputRow(false));
+    studentDocumentsList.appendChild(createDocumentInputRow());
   }
 
   function collectStudentDocumentFiles() {
@@ -240,24 +252,6 @@ document.addEventListener('DOMContentLoaded', async function () {
       all = await window.ArchiviaApi.withRetry(function () {
         return window.ArchiviaApi.getStudents();
       }, 1);
-      if (studentAdviserInput) {
-        try {
-          advisers = await window.ArchiviaApi.withRetry(function () {
-            return window.ArchiviaApi.getTeachers();
-          }, 1);
-          if (adviserSuggestions) {
-            adviserSuggestions.innerHTML = '';
-            advisers.forEach(function (teacher) {
-              var opt = document.createElement('option');
-              opt.value = teacher.name || '';
-              adviserSuggestions.appendChild(opt);
-            });
-          }
-        } catch (_adviserErr) {
-          advisers = [];
-          if (adviserSuggestions) adviserSuggestions.innerHTML = '';
-        }
-      }
       buildYearsSet(all);
       var bucketCount = Array.from(new Set(all.map(function (s) {
         return getSchoolYearStart(getStudentYear(s));
@@ -301,7 +295,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         window.ArchiviaUI.showToast('You can add up to 10 document fields only.');
         return;
       }
-      studentDocumentsList.appendChild(createDocumentInputRow(true));
+      studentDocumentsList.appendChild(createDocumentInputRow());
     });
   }
   if (saveStudentBtn) {
@@ -331,17 +325,6 @@ document.addEventListener('DOMContentLoaded', async function () {
       var nameParts = fullName.split(' ').filter(Boolean);
       var firstName = nameParts.shift() || '';
       var lastName = nameParts.join(' ');
-      var matchedAdviser = adviserName ? advisers.find(function (t) {
-        var name = String(t.name || '').trim().toLowerCase();
-        var email = String(t.email || '').trim().toLowerCase();
-        var input = adviserName.toLowerCase();
-        return name === input || email === input;
-      }) : null;
-
-      if (adviserName && !matchedAdviser) {
-        window.ArchiviaUI.showToast('Adviser not found. Please type an existing teacher name.');
-        return;
-      }
 
       try {
         var created = await window.ArchiviaApi.withRetry(function () {
@@ -353,7 +336,6 @@ document.addEventListener('DOMContentLoaded', async function () {
             batch_year: schoolYear,
             grade_level: gradeLevel,
             section: section,
-            adviser_id: matchedAdviser ? Number(matchedAdviser.id) : null,
             adviser_name: adviserName || null
           });
         }, 1);

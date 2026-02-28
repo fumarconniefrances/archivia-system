@@ -54,7 +54,7 @@ if ($method === 'GET') {
     $countStmt->execute();
     $total = (int)($countStmt->fetch()['total'] ?? 0);
 
-    $sql = 'SELECT id, student_id, first_name, last_name, sex, batch_year, grade_level, section, created_at
+    $sql = 'SELECT id, student_id, first_name, last_name, sex, batch_year, grade_level, section, adviser_name, created_at
             FROM students WHERE ' . implode(' AND ', $where) . ' ORDER BY last_name ASC, first_name ASC
             LIMIT ? OFFSET ?';
     $stmt = $pdo->prepare($sql);
@@ -89,14 +89,6 @@ if ($method === 'POST') {
   $sex = strtoupper(trim((string)($data['sex'] ?? '')));
   $batchYearRaw = $data['batch_year'] ?? null;
   $batchYear = filter_var($batchYearRaw, FILTER_VALIDATE_INT);
-  $adviserIdRaw = $data['adviser_id'] ?? null;
-  $adviserId = ($adviserIdRaw === null || $adviserIdRaw === '') ? 0 : (int)$adviserIdRaw;
-  $adviserName = trim((string)($data['adviser_name'] ?? ''));
-  $adviserIdRaw = $data['adviser_id'] ?? null;
-  $adviserId = ($adviserIdRaw === null || $adviserIdRaw === '') ? 0 : (int)$adviserIdRaw;
-  $adviserName = trim((string)($data['adviser_name'] ?? ''));
-  $adviserIdRaw = $data['adviser_id'] ?? null;
-  $adviserId = ($adviserIdRaw === null || $adviserIdRaw === '') ? 0 : (int)$adviserIdRaw;
   $adviserName = trim((string)($data['adviser_name'] ?? ''));
 
   $errors = [];
@@ -111,7 +103,6 @@ if ($method === 'POST') {
   check_max_length('grade_level', isset($data['grade_level']) ? trim((string)$data['grade_level']) : null, 50, $errors);
   check_max_length('section', isset($data['section']) ? trim((string)$data['section']) : null, 50, $errors);
   check_max_length('adviser_name', $adviserName !== '' ? $adviserName : null, 100, $errors);
-  if ($adviserId < 0) $errors['adviser_id'] = 'adviser_id must be valid';
   if (!empty($errors)) validation_error_response($errors);
 
   $pdo->beginTransaction();
@@ -124,8 +115,8 @@ if ($method === 'POST') {
     }
 
     $stmt = $pdo->prepare('
-      INSERT INTO students (student_id, first_name, last_name, sex, batch_year, grade_level, section)
-      VALUES (:student_id, :first_name, :last_name, :sex, :batch_year, :grade_level, :section)
+      INSERT INTO students (student_id, first_name, last_name, sex, batch_year, grade_level, section, adviser_name)
+      VALUES (:student_id, :first_name, :last_name, :sex, :batch_year, :grade_level, :section, :adviser_name)
     ');
     $stmt->execute([
       ':student_id' => $studentId,
@@ -134,37 +125,10 @@ if ($method === 'POST') {
       ':sex' => $sex,
       ':batch_year' => (int)$batchYear,
       ':grade_level' => isset($data['grade_level']) ? trim((string)$data['grade_level']) : null,
-      ':section' => isset($data['section']) ? trim((string)$data['section']) : null
+      ':section' => isset($data['section']) ? trim((string)$data['section']) : null,
+      ':adviser_name' => $adviserName !== '' ? $adviserName : null
     ]);
     $id = (int)$pdo->lastInsertId();
-
-    if ($adviserId <= 0 && $adviserName !== '') {
-      $stmt = $pdo->prepare('SELECT id FROM users WHERE role = "RECORD_OFFICER" AND status = "ACTIVE" AND (LOWER(name) = LOWER(:name1) OR LOWER(email) = LOWER(:name2)) LIMIT 1');
-      $stmt->execute([
-        ':name1' => $adviserName,
-        ':name2' => $adviserName
-      ]);
-      $matched = $stmt->fetch();
-      if (!$matched) {
-        $pdo->rollBack();
-        error_response('Selected adviser is invalid.', 422);
-      }
-      $adviserId = (int)$matched['id'];
-    }
-
-    if ($adviserId > 0) {
-      $stmt = $pdo->prepare('SELECT id FROM users WHERE id = :id AND role = "RECORD_OFFICER" AND status = "ACTIVE" LIMIT 1');
-      $stmt->execute([':id' => $adviserId]);
-      if (!$stmt->fetch()) {
-        $pdo->rollBack();
-        error_response('Selected adviser is invalid.', 422);
-      }
-      $stmt = $pdo->prepare('INSERT INTO teacher_assignments (teacher_id, student_id) VALUES (:teacher_id, :student_id)');
-      $stmt->execute([
-        ':teacher_id' => $adviserId,
-        ':student_id' => $id
-      ]);
-    }
 
     log_action($pdo, $_SESSION['user_id'], 'create', 'STUDENT', $id, null, [
       'student_id' => $studentId,
@@ -174,13 +138,13 @@ if ($method === 'POST') {
       'batch_year' => (int)$batchYear,
       'grade_level' => isset($data['grade_level']) ? trim((string)$data['grade_level']) : null,
       'section' => isset($data['section']) ? trim((string)$data['section']) : null,
-      'adviser_name' => $adviserName !== '' ? $adviserName : null,
-      'adviser_id' => $adviserId > 0 ? $adviserId : null
+      'adviser_name' => $adviserName !== '' ? $adviserName : null
     ]);
     $pdo->commit();
     json_response(['success' => true, 'data' => ['id' => $id]], 201);
   } catch (Exception $e) {
     if ($pdo->inTransaction()) $pdo->rollBack();
+    error_log($e);
     error_response('Student create failed.', 500);
   }
 }
@@ -197,8 +161,6 @@ if ($method === 'PUT') {
   $sex = strtoupper(trim((string)($data['sex'] ?? '')));
   $batchYearRaw = $data['batch_year'] ?? null;
   $batchYear = filter_var($batchYearRaw, FILTER_VALIDATE_INT);
-  $adviserIdRaw = $data['adviser_id'] ?? null;
-  $adviserId = ($adviserIdRaw === null || $adviserIdRaw === '') ? 0 : (int)$adviserIdRaw;
   $adviserName = trim((string)($data['adviser_name'] ?? ''));
 
   $errors = [];
@@ -213,7 +175,6 @@ if ($method === 'PUT') {
   check_max_length('grade_level', isset($data['grade_level']) ? trim((string)$data['grade_level']) : null, 50, $errors);
   check_max_length('section', isset($data['section']) ? trim((string)$data['section']) : null, 50, $errors);
   check_max_length('adviser_name', $adviserName !== '' ? $adviserName : null, 100, $errors);
-  if ($adviserId < 0) $errors['adviser_id'] = 'adviser_id must be valid';
   if (!empty($errors)) validation_error_response($errors);
 
   $pdo->beginTransaction();
@@ -241,7 +202,8 @@ if ($method === 'PUT') {
           sex = :sex,
           batch_year = :batch_year,
           grade_level = :grade_level,
-          section = :section
+          section = :section,
+          adviser_name = :adviser_name
       WHERE id = :id
     ');
     $stmt->execute([
@@ -252,38 +214,9 @@ if ($method === 'PUT') {
       ':batch_year' => (int)$batchYear,
       ':grade_level' => isset($data['grade_level']) ? trim((string)$data['grade_level']) : null,
       ':section' => isset($data['section']) ? trim((string)$data['section']) : null,
+      ':adviser_name' => $adviserName !== '' ? $adviserName : null,
       ':id' => $id
     ]);
-
-    if ($adviserId <= 0 && $adviserName !== '') {
-      $stmt = $pdo->prepare('SELECT id FROM users WHERE role = "RECORD_OFFICER" AND status = "ACTIVE" AND (LOWER(name) = LOWER(:name1) OR LOWER(email) = LOWER(:name2)) LIMIT 1');
-      $stmt->execute([
-        ':name1' => $adviserName,
-        ':name2' => $adviserName
-      ]);
-      $matched = $stmt->fetch();
-      if (!$matched) {
-        $pdo->rollBack();
-        error_response('Selected adviser is invalid.', 422);
-      }
-      $adviserId = (int)$matched['id'];
-    }
-
-    $stmt = $pdo->prepare('DELETE FROM teacher_assignments WHERE student_id = :student_id');
-    $stmt->execute([':student_id' => $id]);
-    if ($adviserId > 0) {
-      $stmt = $pdo->prepare('SELECT id FROM users WHERE id = :id AND role = "RECORD_OFFICER" AND status = "ACTIVE" LIMIT 1');
-      $stmt->execute([':id' => $adviserId]);
-      if (!$stmt->fetch()) {
-        $pdo->rollBack();
-        error_response('Selected adviser is invalid.', 422);
-      }
-      $stmt = $pdo->prepare('INSERT INTO teacher_assignments (teacher_id, student_id) VALUES (:teacher_id, :student_id)');
-      $stmt->execute([
-        ':teacher_id' => $adviserId,
-        ':student_id' => $id
-      ]);
-    }
 
     log_action($pdo, $_SESSION['user_id'], 'update', 'STUDENT', $id, $existing, [
       'student_id' => $studentId,
@@ -293,13 +226,13 @@ if ($method === 'PUT') {
       'batch_year' => (int)$batchYear,
       'grade_level' => isset($data['grade_level']) ? trim((string)$data['grade_level']) : null,
       'section' => isset($data['section']) ? trim((string)$data['section']) : null,
-      'adviser_name' => $adviserName !== '' ? $adviserName : null,
-      'adviser_id' => $adviserId > 0 ? $adviserId : null
+      'adviser_name' => $adviserName !== '' ? $adviserName : null
     ]);
     $pdo->commit();
     json_response(['success' => true, 'data' => ['id' => $id]]);
   } catch (Exception $e) {
     if ($pdo->inTransaction()) $pdo->rollBack();
+    error_log($e);
     error_response('Student update failed.', 500);
   }
 }

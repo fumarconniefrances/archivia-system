@@ -126,22 +126,34 @@ textarea {
   gap: 8px;
 }
 
-.doc-row-inline {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.doc-row-inline .student-doc-input {
-  flex: 1;
+.doc-input-wrap {
+  position: relative;
 }
 
 .doc-remove-btn {
-  min-width: 42px;
-  width: 42px;
-  height: 42px;
-  padding: 0;
+  position: absolute;
+  top: 50%;
+  right: 6px;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  padding: 0 !important;
+  margin: 0;
+  border: none !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  outline: none;
+  appearance: none;
+  color: #d60000 !important;
+  font-weight: 800;
+  font-size: 18px;
   line-height: 1;
+  cursor: pointer;
+}
+
+.doc-input-wrap .student-doc-input {
+  padding-right: 42px;
 }
 
 .label {
@@ -344,8 +356,10 @@ textarea {
 
 .content {
   padding: 20px;
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 16px;
+  min-height: 100%;
 }
 
 .page-head {
@@ -380,10 +394,15 @@ textarea {
   display: grid;
   gap: 14px;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  align-items: start;
 }
 
 .grid-cards.metrics-2x2 {
   grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+#adminMetrics {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 .dashboard-layout {
@@ -511,7 +530,8 @@ textarea {
 .footer-credit {
   text-align: center;
   width: 100%;
-  margin-top: 8px;
+  margin-top: auto;
+  padding-top: 8px;
 }
 
 .toolbar {
@@ -950,6 +970,10 @@ textarea {
   .dashboard-layout {
     grid-template-columns: 1fr;
   }
+
+  #adminMetrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 768px) {
@@ -985,6 +1009,10 @@ textarea {
   }
 
   .grid-cards {
+    grid-template-columns: 1fr;
+  }
+
+  #adminMetrics {
     grid-template-columns: 1fr;
   }
 

@@ -21,16 +21,8 @@ $stmt = $pdo->prepare('
     s.grade_level,
     s.section,
     s.created_at,
-    COALESCE(u.name, "") AS adviser_name
+    COALESCE(s.adviser_name, "") AS adviser_name
   FROM students s
-  LEFT JOIN teacher_assignments ta ON ta.id = (
-    SELECT ta2.id
-    FROM teacher_assignments ta2
-    WHERE ta2.student_id = s.id
-    ORDER BY ta2.assigned_at DESC, ta2.id DESC
-    LIMIT 1
-  )
-  LEFT JOIN users u ON u.id = ta.teacher_id
   WHERE s.id = :id AND s.deleted_at IS NULL
   LIMIT 1
 ');

@@ -3,7 +3,6 @@ document.addEventListener('DOMContentLoaded', async function () {
   var id = Number(query.get('id')) || 0;
   var currentRole = window.ArchiviaUI.getCurrentRole ? window.ArchiviaUI.getCurrentRole() : '';
   var activeDoc = null;
-  var adviserDirectory = [];
 
   function getDocPreviewUrl(docId) {
     if (window.ArchiviaApi && typeof window.ArchiviaApi.getDocumentPreviewUrl === 'function') {
@@ -74,13 +73,6 @@ document.addEventListener('DOMContentLoaded', async function () {
       var docsAll = await window.ArchiviaApi.withRetry(function () {
         return window.ArchiviaApi.getDocuments();
       }, 1);
-      try {
-        adviserDirectory = await window.ArchiviaApi.withRetry(function () {
-          return window.ArchiviaApi.getTeachers();
-        }, 1);
-      } catch (_adviserError) {
-        adviserDirectory = [];
-      }
 
       if (!students.length) {
         window.ArchiviaUI.renderMetricCards('#profileSummary', [
@@ -181,15 +173,6 @@ document.addEventListener('DOMContentLoaded', async function () {
       }
 
       document.getElementById('editProfileBtn').onclick = function () {
-        var adviserSuggestions = document.getElementById('profileAdviserSuggestions');
-        if (adviserSuggestions) {
-          adviserSuggestions.innerHTML = '';
-          adviserDirectory.forEach(function (teacher) {
-            var opt = document.createElement('option');
-            opt.value = teacher.name || '';
-            adviserSuggestions.appendChild(opt);
-          });
-        }
         document.getElementById('profileStudentId').value = student.studentId || '';
         document.getElementById('profileFullName').value = [student.firstName, student.lastName].filter(Boolean).join(' ');
         document.getElementById('profileSection').value = student.section || '';
@@ -219,19 +202,9 @@ document.addEventListener('DOMContentLoaded', async function () {
         var nameParts = fullName.split(' ').filter(Boolean);
         var firstName = nameParts.shift() || '';
         var lastName = nameParts.join(' ');
-        var matchedAdviser = adviserName ? adviserDirectory.find(function (t) {
-          var name = String(t.name || '').trim().toLowerCase();
-          var email = String(t.email || '').trim().toLowerCase();
-          var input = adviserName.toLowerCase();
-          return name === input || email === input;
-        }) : null;
 
         if (!studentIdValue || !firstName || !lastName || !gradeLevel || !section || !sex || parsedYear < 1988) {
           window.ArchiviaUI.showToast('Please provide valid profile details.');
-          return;
-        }
-        if (adviserName && !matchedAdviser) {
-          window.ArchiviaUI.showToast('Adviser not found. Please type an existing teacher name.');
           return;
         }
 
@@ -244,7 +217,6 @@ document.addEventListener('DOMContentLoaded', async function () {
           batch_year: parsedYear,
           grade_level: gradeLevel,
           section: section,
-          adviser_id: matchedAdviser ? Number(matchedAdviser.id) : null,
           adviser_name: adviserName || null
         }).then(function () {
           window.ArchiviaUI.closeModal('#editProfileModal');
