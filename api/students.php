@@ -10,55 +10,74 @@ $method = $_SERVER['REQUEST_METHOD'];
 
 if ($method === 'GET') {
   require_record_officer();
-  $params = [];
-  $where = ['deleted_at IS NULL'];
+  try {
+    $params = [];
+    $where = ['deleted_at IS NULL'];
 
-  $q = trim($_GET['q'] ?? '');
-  $sex = strtoupper(trim($_GET['sex'] ?? ''));
-  $sy = trim($_GET['sy'] ?? '');
+    $q = trim($_GET['q'] ?? '');
+    $sex = strtoupper(trim($_GET['sex'] ?? ''));
+    $sy = trim($_GET['sy'] ?? '');
 
-  if ($q !== '') {
-    $where[] = '(student_id LIKE :q OR first_name LIKE :q OR last_name LIKE :q)';
-    $params[':q'] = '%' . $q . '%';
-  }
-
-  if ($sex !== '' && in_array($sex, ['MALE', 'FEMALE'], true)) {
-    $where[] = 'sex = :sex';
-    $params[':sex'] = $sex;
-  }
-
-  if ($sy !== '') {
-    $start = 0;
-    if (preg_match('/(\d{4})\s*-\s*\d{4}/', $sy, $m)) {
-      $start = (int)$m[1];
-    } elseif (preg_match('/\d{4}/', $sy, $m)) {
-      $start = (int)$m[0];
+    if ($q !== '') {
+      $where[] = '(first_name LIKE ? OR last_name LIKE ? OR student_id LIKE ?)';
+      $qLike = '%' . $q . '%';
+      $params[] = $qLike;
+      $params[] = $qLike;
+      $params[] = $qLike;
     }
-    if ($start >= 1988) {
-      $where[] = '(batch_year = :sy OR batch_year = :sy2)';
-      $params[':sy'] = $start;
-      $params[':sy2'] = $start + 1;
+
+    if ($sex !== '' && in_array($sex, ['MALE', 'FEMALE'], true)) {
+      $where[] = 'sex = ?';
+      $params[] = $sex;
     }
-  }
 
-  [$page, $limit, $offset] = get_pagination_params(50, 200);
-  $countSql = 'SELECT COUNT(*) AS total FROM students WHERE ' . implode(' AND ', $where);
-  $countStmt = $pdo->prepare($countSql);
-  $countStmt->execute($params);
-  $total = (int)($countStmt->fetch()['total'] ?? 0);
+    if ($sy !== '') {
+      $start = 0;
+      if (preg_match('/(\d{4})\s*-\s*\d{4}/', $sy, $m)) {
+        $start = (int)$m[1];
+      } elseif (preg_match('/\d{4}/', $sy, $m)) {
+        $start = (int)$m[0];
+      }
+      if ($start >= 1988) {
+        $where[] = '(batch_year = ? OR batch_year = ?)';
+        $params[] = $start;
+        $params[] = $start + 1;
+      }
+    }
 
-  $sql = 'SELECT id, student_id, first_name, last_name, sex, batch_year, grade_level, section, created_at
-          FROM students WHERE ' . implode(' AND ', $where) . ' ORDER BY last_name ASC, first_name ASC
-          LIMIT :limit OFFSET :offset';
-  $stmt = $pdo->prepare($sql);
-  foreach ($params as $k => $v) {
-    $stmt->bindValue($k, $v);
+    [$page, $limit, $offset] = get_pagination_params(50, 200);
+    $countSql = 'SELECT COUNT(*) AS total FROM students WHERE ' . implode(' AND ', $where);
+    $countStmt = $pdo->prepare($countSql);
+    foreach ($params as $i => $value) {
+      $countStmt->bindValue($i + 1, $value, is_int($value) ? PDO::PARAM_INT : PDO::PARAM_STR);
+    }
+    $countStmt->execute();
+    $total = (int)($countStmt->fetch()['total'] ?? 0);
+
+    $sql = 'SELECT id, student_id, first_name, last_name, sex, batch_year, grade_level, section, created_at
+            FROM students WHERE ' . implode(' AND ', $where) . ' ORDER BY last_name ASC, first_name ASC
+            LIMIT ? OFFSET ?';
+    $stmt = $pdo->prepare($sql);
+    $bindIndex = 1;
+    foreach ($params as $value) {
+      $stmt->bindValue($bindIndex, $value, is_int($value) ? PDO::PARAM_INT : PDO::PARAM_STR);
+      $bindIndex += 1;
+    }
+    $stmt->bindValue($bindIndex, (int)$limit, PDO::PARAM_INT);
+    $stmt->bindValue($bindIndex + 1, (int)$offset, PDO::PARAM_INT);
+    $stmt->execute();
+    $rows = $stmt->fetchAll();
+    json_response(['success' => true, 'data' => $rows, 'page' => $page, 'limit' => $limit, 'total' => $total]);
+  } catch (Exception $e) {
+    error_log($e);
+    http_response_code(500);
+    header('Content-Type: application/json');
+    echo json_encode([
+      'success' => false,
+      'message' => 'Search operation failed.'
+    ]);
+    exit;
   }
-  $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
-  $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
-  $stmt->execute();
-  $rows = $stmt->fetchAll();
-  json_response(['success' => true, 'data' => $rows, 'page' => $page, 'limit' => $limit, 'total' => $total]);
 }
 
 if ($method === 'POST') {

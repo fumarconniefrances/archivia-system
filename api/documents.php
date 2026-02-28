@@ -53,22 +53,54 @@ if ($method === 'GET') {
 if ($method === 'POST') {
   require_record_officer();
 
+  $reject_invalid_pdf = function () {
+    http_response_code(400);
+    header('Content-Type: application/json');
+    echo json_encode([
+      'success' => false,
+      'message' => 'Invalid PDF file.'
+    ]);
+    exit;
+  };
+
   $studentId = (int)($_POST['student_id'] ?? 0);
   if ($studentId <= 0) error_response('Invalid student id.', 422);
 
   if (empty($_FILES['file'])) error_response('File is required.', 422);
   $file = $_FILES['file'];
-  if ($file['error'] !== UPLOAD_ERR_OK) error_response('File upload failed.', 400);
-  if ($file['size'] > 10 * 1024 * 1024) error_response('File too large (max 10MB).', 422);
-  $finfo = new finfo(FILEINFO_MIME_TYPE);
-  $mime = $finfo->file($file['tmp_name']);
-  if ($mime !== 'application/pdf') error_response('Only PDF files are allowed.', 422);
+  if ($file['error'] !== UPLOAD_ERR_OK) $reject_invalid_pdf();
+  if ($file['size'] > 10 * 1024 * 1024) $reject_invalid_pdf();
+
+  $ext = strtolower(pathinfo((string)$file['name'], PATHINFO_EXTENSION));
+  if ($ext !== 'pdf') $reject_invalid_pdf();
+
+  $finfo = finfo_open(FILEINFO_MIME_TYPE);
+  $mime = $finfo ? (string)finfo_file($finfo, $file['tmp_name']) : '';
+  if ($finfo) finfo_close($finfo);
+  if ($mime !== 'application/pdf') $reject_invalid_pdf();
+
+  $handle = fopen($file['tmp_name'], 'rb');
+  if ($handle === false) $reject_invalid_pdf();
+  $header = fread($handle, 4);
+  fclose($handle);
+  if ($header !== '%PDF') $reject_invalid_pdf();
+
+  $tailSampleSize = min((int)$file['size'], 2048);
+  $tailHandle = fopen($file['tmp_name'], 'rb');
+  if ($tailHandle === false) $reject_invalid_pdf();
+  if ($tailSampleSize > 0) {
+    fseek($tailHandle, -$tailSampleSize, SEEK_END);
+  }
+  $tailChunk = (string)fread($tailHandle, $tailSampleSize);
+  fclose($tailHandle);
+  if (strpos($tailChunk, '%%EOF') === false) $reject_invalid_pdf();
 
   $stmt = $pdo->prepare('SELECT id, batch_year FROM students WHERE id = :id AND deleted_at IS NULL LIMIT 1');
   $stmt->execute([':id' => $studentId]);
   $student = $stmt->fetch();
   if (!$student) error_response('Student not found.', 404);
 
+  $targetPath = null;
   $pdo->beginTransaction();
   try {
     $groupId = (int)($_POST['document_group_id'] ?? 0);
@@ -127,11 +159,14 @@ if ($method === 'POST') {
     $pdo->commit();
     json_response(['success' => true, 'data' => ['id' => $docId]]);
   } catch (Exception $e) {
-    $pdo->rollBack();
+    if ($pdo->inTransaction()) {
+      $pdo->rollBack();
+    }
     if (isset($targetPath) && is_file($targetPath)) {
       unlink($targetPath);
     }
-    error_response('Upload failed.', 500);
+    error_log($e);
+    $reject_invalid_pdf();
   }
 }
 
