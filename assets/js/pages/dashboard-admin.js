@@ -1,23 +1,8 @@
 document.addEventListener('DOMContentLoaded', async function () {
-  var addStudentBtn = document.getElementById('addStudentBtn');
-  var saveStudentBtn = document.getElementById('saveStudentBtn');
   var searchInput = document.getElementById('globalSearch');
   var allStudents = [];
   var allDocs = [];
   var allLogs = [];
-
-  if (addStudentBtn) {
-    addStudentBtn.addEventListener('click', function () {
-      window.ArchiviaUI.openModal('#addStudentModal');
-    });
-  }
-
-  if (saveStudentBtn) {
-    saveStudentBtn.addEventListener('click', function () {
-      window.ArchiviaUI.closeModal('#addStudentModal');
-      window.ArchiviaUI.showToast('Student record saved.');
-    });
-  }
 
   function getStudentYear(student) {
     if (typeof student.batchYear === 'number' && student.batchYear >= 1988) return student.batchYear;

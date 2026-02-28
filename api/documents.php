@@ -45,7 +45,8 @@ function validate_uploaded_document($file) {
     'jpg' => ['image/jpeg'],
     'jpeg' => ['image/jpeg'],
     'png' => ['image/png'],
-    'webp' => ['image/webp']
+    'webp' => ['image/webp'],
+    'docx' => ['application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/zip']
   ];
   if (!isset($allowedExt[$ext])) {
     reject_invalid_document();
@@ -94,6 +95,21 @@ function validate_uploaded_document($file) {
   }
   if ($mime === 'image/webp' && !(substr($head, 0, 4) === 'RIFF' && substr($head, 8, 4) === 'WEBP')) {
     reject_invalid_document();
+  }
+  if ($ext === 'docx') {
+    if (substr($head, 0, 2) !== 'PK') {
+      reject_invalid_document();
+    }
+    $zip = new ZipArchive();
+    if ($zip->open($file['tmp_name']) !== true) {
+      reject_invalid_document();
+    }
+    $hasContentTypes = $zip->locateName('[Content_Types].xml') !== false;
+    $hasMainDoc = $zip->locateName('word/document.xml') !== false;
+    $zip->close();
+    if (!$hasContentTypes || !$hasMainDoc) {
+      reject_invalid_document();
+    }
   }
 
   return ['ext' => $ext, 'mime' => $mime];
@@ -146,32 +162,91 @@ function image_to_jpeg_data($path, $mime) {
   return ['jpeg' => $jpegData, 'width' => $width, 'height' => $height];
 }
 
-function build_single_page_pdf_from_jpeg($jpegData, $width, $height) {
-  $widthPt = max(1, (float)$width);
-  $heightPt = max(1, (float)$height);
-  $content = "q\n{$widthPt} 0 0 {$heightPt} 0 0 cm\n/Im0 Do\nQ\n";
+function image_blob_to_jpeg_data($blob, $mime) {
+  $size = @getimagesizefromstring($blob);
+  if (!$size || empty($size[0]) || empty($size[1])) {
+    return null;
+  }
+  $width = (int)$size[0];
+  $height = (int)$size[1];
+  if ($mime === 'image/jpeg') {
+    return ['jpeg' => $blob, 'width' => $width, 'height' => $height];
+  }
+  if (!function_exists('imagecreatefromstring') || !function_exists('imagecreatetruecolor')) {
+    return null;
+  }
+  $src = @imagecreatefromstring($blob);
+  if (!$src) return null;
+  $canvas = imagecreatetruecolor($width, $height);
+  $white = imagecolorallocate($canvas, 255, 255, 255);
+  imagefill($canvas, 0, 0, $white);
+  imagecopy($canvas, $src, 0, 0, 0, 0, $width, $height);
+  ob_start();
+  imagejpeg($canvas, null, 90);
+  $jpeg = (string)ob_get_clean();
+  imagedestroy($canvas);
+  imagedestroy($src);
+  return ['jpeg' => $jpeg, 'width' => $width, 'height' => $height];
+}
 
+function extract_docx_images_as_jpegs($path) {
+  $zip = new ZipArchive();
+  if ($zip->open($path) !== true) return [];
+  $pages = [];
+  for ($i = 0; $i < $zip->numFiles; $i++) {
+    $name = $zip->getNameIndex($i);
+    if (strpos($name, 'word/media/') !== 0) continue;
+    $blob = $zip->getFromIndex($i);
+    if ($blob === false) continue;
+    $finfo = finfo_open(FILEINFO_MIME_TYPE);
+    $mime = $finfo ? (string)finfo_buffer($finfo, $blob) : '';
+    if ($finfo) finfo_close($finfo);
+    if (!in_array($mime, ['image/jpeg', 'image/png', 'image/webp'], true)) continue;
+    $img = image_blob_to_jpeg_data($blob, $mime);
+    if ($img) $pages[] = $img;
+  }
+  $zip->close();
+  return $pages;
+}
+
+function build_pdf_from_jpeg_pages($pages) {
+  if (!$pages || !count($pages)) return null;
   $objects = [];
+  $pageRefs = [];
+  $objId = 3;
+  foreach ($pages as $page) {
+    $imgObj = $objId++;
+    $contentObj = $objId++;
+    $pageObj = $objId++;
+    $widthPt = max(1, (float)$page['width']);
+    $heightPt = max(1, (float)$page['height']);
+    $content = "q\n{$widthPt} 0 0 {$heightPt} 0 0 cm\n/Im0 Do\nQ\n";
+    $objects[$imgObj] = '<< /Type /XObject /Subtype /Image /Width ' . (int)$page['width'] . ' /Height ' . (int)$page['height'] . ' /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ' . strlen($page['jpeg']) . " >>\nstream\n" . $page['jpeg'] . "\nendstream";
+    $objects[$contentObj] = '<< /Length ' . strlen($content) . " >>\nstream\n" . $content . "endstream";
+    $objects[$pageObj] = "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 {$widthPt} {$heightPt}] /Resources << /XObject << /Im0 {$imgObj} 0 R >> >> /Contents {$contentObj} 0 R >>";
+    $pageRefs[] = "{$pageObj} 0 R";
+  }
   $objects[1] = '<< /Type /Catalog /Pages 2 0 R >>';
-  $objects[2] = '<< /Type /Pages /Kids [3 0 R] /Count 1 >>';
-  $objects[3] = "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 {$widthPt} {$heightPt}] /Resources << /XObject << /Im0 4 0 R >> >> /Contents 5 0 R >>";
-  $objects[4] = '<< /Type /XObject /Subtype /Image /Width ' . (int)$width . ' /Height ' . (int)$height . ' /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ' . strlen($jpegData) . " >>\nstream\n" . $jpegData . "\nendstream";
-  $objects[5] = '<< /Length ' . strlen($content) . " >>\nstream\n" . $content . "endstream";
+  $objects[2] = '<< /Type /Pages /Kids [' . implode(' ', $pageRefs) . '] /Count ' . count($pageRefs) . ' >>';
+  ksort($objects);
 
   $pdf = "%PDF-1.4\n";
   $offsets = [0];
-  for ($i = 1; $i <= 5; $i++) {
+  $maxObj = max(array_keys($objects));
+  for ($i = 1; $i <= $maxObj; $i++) {
+    if (!isset($objects[$i])) continue;
     $offsets[$i] = strlen($pdf);
     $pdf .= $i . " 0 obj\n" . $objects[$i] . "\nendobj\n";
   }
-
   $xrefPos = strlen($pdf);
-  $pdf .= "xref\n0 6\n0000000000 65535 f \n";
-  for ($i = 1; $i <= 5; $i++) {
-    $pdf .= sprintf('%010d 00000 n ' . "\n", $offsets[$i]);
+  $pdf .= "xref\n0 " . ($maxObj + 1) . "\n0000000000 65535 f \n";
+  for ($i = 1; $i <= $maxObj; $i++) {
+    $off = isset($offsets[$i]) ? $offsets[$i] : 0;
+    $flag = isset($offsets[$i]) ? 'n' : 'f';
+    $gen = isset($offsets[$i]) ? '00000' : '65535';
+    $pdf .= sprintf('%010d %s %s ' . "\n", $off, $gen, $flag);
   }
-  $pdf .= "trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n{$xrefPos}\n%%EOF";
-
+  $pdf .= "trailer\n<< /Size " . ($maxObj + 1) . " /Root 1 0 R >>\nstartxref\n{$xrefPos}\n%%EOF";
   return $pdf;
 }
 
@@ -218,20 +293,35 @@ if ($method === 'GET' && ($_GET['action'] ?? '') === 'export_pdf') {
     exit;
   }
 
-  if (!in_array($doc['mime_type'], ['image/jpeg', 'image/png', 'image/webp'], true)) {
-    error_response('Unsupported export format.', 422);
+  if (in_array($doc['mime_type'], ['image/jpeg', 'image/png', 'image/webp'], true)) {
+    $img = image_to_jpeg_data($real, $doc['mime_type']);
+    if (!$img) {
+      error_response('PDF export failed.', 500);
+    }
+    $pdf = build_pdf_from_jpeg_pages([$img]);
+    if ($pdf === null) error_response('PDF export failed.', 500);
+    header('Content-Type: application/pdf');
+    header('Content-Length: ' . strlen($pdf));
+    header('Content-Disposition: attachment; filename="' . $exportName . '"');
+    echo $pdf;
+    exit;
   }
 
-  $img = image_to_jpeg_data($real, $doc['mime_type']);
-  if (!$img) {
-    error_response('PDF export failed.', 500);
+  if ($doc['mime_type'] === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || pathinfo((string)$doc['original_name'], PATHINFO_EXTENSION) === 'docx') {
+    $pages = extract_docx_images_as_jpegs($real);
+    if (!count($pages)) {
+      error_response('PDF export failed.', 422);
+    }
+    $pdf = build_pdf_from_jpeg_pages($pages);
+    if ($pdf === null) error_response('PDF export failed.', 500);
+    header('Content-Type: application/pdf');
+    header('Content-Length: ' . strlen($pdf));
+    header('Content-Disposition: attachment; filename="' . $exportName . '"');
+    echo $pdf;
+    exit;
   }
-  $pdf = build_single_page_pdf_from_jpeg($img['jpeg'], $img['width'], $img['height']);
-  header('Content-Type: application/pdf');
-  header('Content-Length: ' . strlen($pdf));
-  header('Content-Disposition: attachment; filename="' . $exportName . '"');
-  echo $pdf;
-  exit;
+
+  error_response('Unsupported export format.', 422);
 }
 
 if ($method === 'GET') {
