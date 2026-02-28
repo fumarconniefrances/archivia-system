@@ -40,9 +40,12 @@ document.addEventListener('DOMContentLoaded', async function () {
   }
 
   function renderDetails(student) {
+    var gradYear = Number(student.batchYear) || 0;
+    var yearsSinceGraduation = gradYear >= 1900 ? Math.max(0, (new Date().getFullYear() - gradYear)) : 0;
     var details = [
       ['Grade', student.gradeLevel],
       ['School Year', formatSchoolYear(student.batchYear)],
+      ['Years Since Graduation', gradYear >= 1900 ? String(yearsSinceGraduation) + ' year(s)' : '-'],
       ['Section', student.section],
       ['Created At', new Date(student.createdAt).toLocaleString()]
     ];
@@ -167,8 +170,37 @@ document.addEventListener('DOMContentLoaded', async function () {
       };
 
       document.getElementById('saveProfileBtn').onclick = function () {
-        window.ArchiviaUI.closeModal('#editProfileModal');
-        window.ArchiviaUI.showToast('Profile changes saved.');
+        var firstNameInput = document.getElementById('profileFirstName');
+        var lastNameInput = document.getElementById('profileLastName');
+        var batchYearInput = document.getElementById('profileBatchYear');
+        var gradeLevelInput = document.getElementById('profileGradeLevel');
+
+        var firstName = firstNameInput ? firstNameInput.value.trim() : '';
+        var lastName = lastNameInput ? lastNameInput.value.trim() : '';
+        var parsedYear = parseSchoolYearToStartYear(batchYearInput ? batchYearInput.value : '');
+        var gradeLevel = gradeLevelInput ? gradeLevelInput.value.trim() : '';
+
+        if (!firstName || !lastName || !gradeLevel || parsedYear < 1988) {
+          window.ArchiviaUI.showToast('Please provide valid profile details.');
+          return;
+        }
+
+        window.ArchiviaApi.updateStudent({
+          id: student.id,
+          student_id: student.studentId,
+          first_name: firstName,
+          last_name: lastName,
+          sex: String(student.sex || '').toUpperCase(),
+          batch_year: parsedYear,
+          grade_level: gradeLevel,
+          section: student.section || ''
+        }).then(function () {
+          window.ArchiviaUI.closeModal('#editProfileModal');
+          window.ArchiviaUI.showToast('Profile changes saved to database.');
+          load();
+        }).catch(function (error) {
+          window.ArchiviaUI.showToast(error.message || 'Failed to save profile.');
+        });
       };
 
       document.getElementById('uploadProfileDocBtn').onclick = function () {
@@ -226,6 +258,13 @@ document.addEventListener('DOMContentLoaded', async function () {
 
   await load();
 });
+
+function parseSchoolYearToStartYear(value) {
+  var text = String(value || '').toLowerCase();
+  var match = text.match(/(\d{4})\s*-\s*\d{4}/) || text.match(/(\d{4})/);
+  return match ? Number(match[1]) : 0;
+}
+
   function formatSchoolYear(value) {
     var year = 0;
     if (typeof value === 'number') year = value;
