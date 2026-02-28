@@ -103,6 +103,7 @@
       batchYear: Number(item.batch_year || item.batchYear) || 0,
       gradeLevel: item.grade_level || item.gradeLevel || 'N/A',
       section: item.section || 'N/A',
+      adviserName: item.adviser_name || item.adviserName || '',
       createdAt: item.created_at || item.createdAt || null
     };
   }
@@ -213,6 +214,9 @@
     getStudents(params) {
       const query = params ? new URLSearchParams(params).toString() : '';
       return http('/students.php' + (query ? `?${query}` : '')).then(items => items.map(mapStudent));
+    },
+    getStudent(id) {
+      return http('/student_show.php?id=' + encodeURIComponent(id)).then(mapStudent);
     },
     createStudent(payload) {
       return http('/students.php', { method: 'POST', body: payload });

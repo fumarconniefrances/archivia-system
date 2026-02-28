@@ -44,6 +44,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     var yearsSinceGraduation = gradYear >= 1900 ? Math.max(0, (new Date().getFullYear() - gradYear)) : 0;
     var details = [
       ['Grade', student.gradeLevel],
+      ['Adviser', student.adviserName || '-'],
       ['School Year', formatSchoolYear(student.batchYear)],
       ['Years Since Graduation', gradYear >= 1900 ? String(yearsSinceGraduation) + ' year(s)' : '-'],
       ['Section', student.section],
@@ -91,7 +92,17 @@ document.addEventListener('DOMContentLoaded', async function () {
         return;
       }
 
-      var student = students.find(function (s) { return s.id === id; }) || students[0];
+      var fallbackStudent = students.find(function (s) { return s.id === id; }) || students[0];
+      var student = fallbackStudent;
+      if (fallbackStudent && fallbackStudent.id) {
+        try {
+          student = await window.ArchiviaApi.withRetry(function () {
+            return window.ArchiviaApi.getStudent(fallbackStudent.id);
+          }, 1);
+        } catch (_studentError) {
+          student = fallbackStudent;
+        }
+      }
       renderProfileCard(student);
       renderDetails(student);
 
