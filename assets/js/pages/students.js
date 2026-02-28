@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', async function () {
   var studentSectionInput = document.getElementById('studentSection');
   var studentSexInput = document.getElementById('studentSex');
   var studentSchoolYearInput = document.getElementById('studentSchoolYear');
+  var studentInitialDocInput = document.getElementById('studentInitialDoc');
   var schoolYearSection = document.getElementById('schoolYearSection');
   var yearStudentsSection = document.getElementById('yearStudentsSection');
   var schoolYearTableBody = document.getElementById('schoolYearTableBody');
@@ -228,13 +229,14 @@ document.addEventListener('DOMContentLoaded', async function () {
     });
   }
   if (saveStudentBtn) {
-    saveStudentBtn.addEventListener('click', function () {
+    saveStudentBtn.addEventListener('click', async function () {
       var studentId = studentLrnInput ? studentLrnInput.value.trim() : '';
       var fullName = studentNameInput ? studentNameInput.value.trim() : '';
       var gradeLevel = studentGradeInput ? studentGradeInput.value.trim() : '';
       var section = studentSectionInput ? studentSectionInput.value.trim() : '';
       var schoolYear = studentSchoolYearInput ? parseSchoolYear(studentSchoolYearInput.value) : 0;
       var sex = studentSexInput ? studentSexInput.value : '';
+      var initialDocFile = studentInitialDocInput && studentInitialDocInput.files ? studentInitialDocInput.files[0] : null;
 
       if (!studentId || !fullName || !gradeLevel || !section || !schoolYear || !sex) {
         window.ArchiviaUI.showToast('Please complete all required fields.');
@@ -249,29 +251,39 @@ document.addEventListener('DOMContentLoaded', async function () {
       var firstName = nameParts.shift() || '';
       var lastName = nameParts.join(' ');
 
-      window.ArchiviaApi.withRetry(function () {
-        return window.ArchiviaApi.createStudent({
-          student_id: studentId,
-          first_name: firstName,
-          last_name: lastName,
-          sex: sex,
-          batch_year: schoolYear,
-          grade_level: gradeLevel,
-          section: section
-        });
-      }, 1).then(function () {
+      try {
+        var created = await window.ArchiviaApi.withRetry(function () {
+          return window.ArchiviaApi.createStudent({
+            student_id: studentId,
+            first_name: firstName,
+            last_name: lastName,
+            sex: sex,
+            batch_year: schoolYear,
+            grade_level: gradeLevel,
+            section: section
+          });
+        }, 1);
+
+        if (initialDocFile) {
+          var formData = new FormData();
+          formData.append('student_id', String(created.id));
+          formData.append('file', initialDocFile);
+          await window.ArchiviaApi.uploadDocument(formData);
+        }
+
         if (studentLrnInput) studentLrnInput.value = '';
         if (studentNameInput) studentNameInput.value = '';
         if (studentGradeInput) studentGradeInput.value = '';
         if (studentSectionInput) studentSectionInput.value = '';
         if (studentSexInput) studentSexInput.value = '';
         if (studentSchoolYearInput) studentSchoolYearInput.value = '';
+        if (studentInitialDocInput) studentInitialDocInput.value = '';
         window.ArchiviaUI.closeModal('#addStudentModal');
-        load();
-        window.ArchiviaUI.showToast('Student record saved.');
-      }).catch(function (error) {
+        await load();
+        window.ArchiviaUI.showToast(initialDocFile ? 'Student and initial document saved.' : 'Student record saved.');
+      } catch (error) {
         window.ArchiviaUI.showToast(error.message || 'Failed to save student.');
-      });
+      }
     });
   }
   if (backToYearsBtn) {

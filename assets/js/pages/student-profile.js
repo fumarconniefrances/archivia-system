@@ -1,6 +1,15 @@
 document.addEventListener('DOMContentLoaded', async function () {
   var query = new URLSearchParams(window.location.search);
   var id = Number(query.get('id')) || 0;
+  var currentRole = window.ArchiviaUI.getCurrentRole ? window.ArchiviaUI.getCurrentRole() : '';
+  var activeDoc = null;
+
+  function getDocDownloadUrl(docId) {
+    if (window.ArchiviaApi && typeof window.ArchiviaApi.getDocumentDownloadUrl === 'function') {
+      return window.ArchiviaApi.getDocumentDownloadUrl(docId);
+    }
+    return 'api/documents.php?action=download&id=' + encodeURIComponent(docId);
+  }
 
   function renderProfileCard(student) {
     var profileCard = document.getElementById('profileCard');
@@ -96,21 +105,51 @@ document.addEventListener('DOMContentLoaded', async function () {
         {
           key: 'id',
           render: function (row) {
-            return window.ArchiviaUI.createActionButton('View', 'btn btn-secondary', { 'data-view-doc': row.id });
+            return window.ArchiviaUI.createActionButton('Preview', 'btn btn-secondary', { 'data-view-doc': row.id });
           }
         }
       ], 'No documents available for this student.');
+
+      var previewFrame = document.getElementById('profileDocPreviewFrame');
+      var requestCopyBtn = document.getElementById('profileRequestCopyBtn');
+      var exportDocBtn = document.getElementById('profileExportDocBtn');
+      if (requestCopyBtn) requestCopyBtn.classList.toggle('hidden', currentRole === 'admin');
+      if (exportDocBtn) exportDocBtn.classList.toggle('hidden', currentRole !== 'admin');
 
       window.ArchiviaUI.qsa('[data-view-doc]').forEach(function (button) {
         button.addEventListener('click', function () {
           var docId = Number(button.getAttribute('data-view-doc'));
           var doc = docs.find(function (item) { return item.id === docId; });
           var label = doc ? doc.originalName : String(docId);
+          activeDoc = doc || null;
           var target = document.getElementById('profileViewerDocName');
           if (target) target.textContent = label;
+          if (previewFrame) {
+            previewFrame.src = activeDoc ? getDocDownloadUrl(activeDoc.id) : 'about:blank';
+          }
           window.ArchiviaUI.openModal('#profileDocViewerModal');
         });
       });
+
+      if (requestCopyBtn) {
+        requestCopyBtn.onclick = function () {
+          if (!activeDoc) {
+            window.ArchiviaUI.showToast('Select a document preview first.');
+            return;
+          }
+          window.ArchiviaUI.showToast('Copy request submitted. Please coordinate with admin for PDF export.');
+        };
+      }
+
+      if (exportDocBtn) {
+        exportDocBtn.onclick = function () {
+          if (!activeDoc) {
+            window.ArchiviaUI.showToast('Select a document preview first.');
+            return;
+          }
+          window.open(getDocDownloadUrl(activeDoc.id), '_blank', 'noopener');
+        };
+      }
 
       document.getElementById('editProfileBtn').onclick = function () {
         document.getElementById('profileFirstName').value = student.firstName;

@@ -230,6 +230,9 @@
     uploadDocument(formData) {
       return http('/documents.php', { method: 'POST', body: formData });
     },
+    getDocumentDownloadUrl(id) {
+      return API_BASE + '/documents.php?action=download&id=' + encodeURIComponent(id);
+    },
     getTeachers() {
       return http('/teachers.php').then(items => items.map(mapUser));
     },
