@@ -9,7 +9,7 @@ enforce_csrf_for_request();
 $method = $_SERVER['REQUEST_METHOD'];
 
 if ($method === 'GET') {
-  require_record_officer();
+  require_admin();
   $stmt = $pdo->prepare('SELECT id, name, email, role, department, created_at FROM users WHERE role = "RECORD_OFFICER" AND status = "ACTIVE" ORDER BY name ASC');
   $stmt->execute();
   json_response(['success' => true, 'data' => $stmt->fetchAll()]);

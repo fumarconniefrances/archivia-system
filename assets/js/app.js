@@ -138,7 +138,8 @@
   }
 
   function createActionButton(label, className, attrs) {
-    var btn = createElement('button', className || 'btn btn-secondary', label || 'Open');
+    var text = (label === undefined || label === null) ? 'Open' : String(label);
+    var btn = createElement('button', className || 'btn btn-secondary', text);
     btn.type = 'button';
     Object.keys(attrs || {}).forEach(function (key) {
       btn.setAttribute(key, attrs[key]);
@@ -586,6 +587,11 @@
     if (!getRequiredRoles().length) return;
     var page = window.location.pathname.split('/').pop() || 'unknown';
     var title = document.title || page;
+    var now = Date.now();
+    var key = 'archivia_last_page_view_' + page;
+    var last = Number(sessionStorage.getItem(key) || 0);
+    if (now - last < 15000) return;
+    sessionStorage.setItem(key, String(now));
     window.ArchiviaApi.trackActivity({
       event: 'page_view',
       page: page,

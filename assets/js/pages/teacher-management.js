@@ -1,6 +1,16 @@
 document.addEventListener('DOMContentLoaded', async function () {
   var searchInput = document.getElementById('globalSearch');
-  if (searchInput) searchInput.value = '';
+  var userHasTypedSearch = false;
+  function clearSearchInput() {
+    if (!searchInput || userHasTypedSearch) return;
+    searchInput.value = '';
+  }
+  clearSearchInput();
+  // Some browsers restore autofill/text on refresh or bfcache navigation.
+  window.addEventListener('pageshow', clearSearchInput);
+  [0, 80, 250, 600, 1200].forEach(function (delay) {
+    setTimeout(clearSearchInput, delay);
+  });
   var all = [];
   var selectedTeacherId = 0;
   var newTeacherBtn = document.getElementById('newTeacherBtn');
@@ -91,7 +101,13 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
   }
 
-  if (searchInput) searchInput.addEventListener('input', draw);
+  if (searchInput) {
+    searchInput.addEventListener('input', function () {
+      userHasTypedSearch = true;
+      draw();
+    });
+    searchInput.addEventListener('focus', clearSearchInput);
+  }
 
   if (newTeacherBtn) {
     newTeacherBtn.addEventListener('click', function () {
