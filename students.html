@@ -107,9 +107,15 @@
           <input class="input" id="studentSchoolYear" placeholder="e.g., SY 1988-1989" required />
         </div>
         <div class="form-field">
+          <label class="label" for="studentAdviser">Adviser (Optional)</label>
+          <select class="select" id="studentAdviser">
+            <option value="">No adviser selected</option>
+          </select>
+        </div>
+        <div class="form-field">
           <label class="label" for="studentInitialDoc">Initial Student Document (Scanned Image/PDF/DOCX)</label>
-          <input class="input" id="studentInitialDoc" type="file" accept="image/*,application/pdf,.docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" />
-          <p class="muted">Optional. JPG/PNG/WEBP/PDF/DOCX, max 10MB.</p>
+          <input class="input" id="studentInitialDoc" type="file" accept="image/*,application/pdf,.docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" multiple />
+          <p class="muted">Optional. Supports multiple files (up to 10). JPG/PNG/WEBP/PDF/DOCX, max 10MB each.</p>
         </div>
       </div>
       <div class="modal-foot">

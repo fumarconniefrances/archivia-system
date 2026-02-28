@@ -222,18 +222,28 @@ document.addEventListener('DOMContentLoaded', async function () {
       var docInput = document.getElementById('profileDocInput');
       if (docInput) {
         docInput.onchange = function (event) {
-          var file = event.target.files && event.target.files[0];
-          if (!file) return;
-          var formData = new FormData();
-          formData.append('student_id', String(student.id));
-          formData.append('file', file);
-          window.ArchiviaApi.uploadDocument(formData).then(function () {
-            window.ArchiviaUI.showToast('Document uploaded to this student profile.');
+          var files = event.target.files ? Array.from(event.target.files) : [];
+          if (!files.length) return;
+          if (files.length > 10) {
+            window.ArchiviaUI.showToast('You can upload up to 10 documents at a time.');
             docInput.value = '';
-            load();
-          }).catch(function (error) {
-            window.ArchiviaUI.showToast(error.message || 'Upload failed.');
-          });
+            return;
+          }
+          (async function () {
+            try {
+              for (var i = 0; i < files.length; i += 1) {
+                var formData = new FormData();
+                formData.append('student_id', String(student.id));
+                formData.append('file', files[i]);
+                await window.ArchiviaApi.uploadDocument(formData);
+              }
+              window.ArchiviaUI.showToast(files.length > 1 ? 'Documents uploaded to this student profile.' : 'Document uploaded to this student profile.');
+              docInput.value = '';
+              await load();
+            } catch (error) {
+              window.ArchiviaUI.showToast(error.message || 'Upload failed.');
+            }
+          })();
         };
       }
 
