@@ -1,5 +1,7 @@
 -- Pre-production security/data-hardening migration for ARCHIVIA.
 -- Run once before go-live.
+-- Note: Fresh installs now include these tables in archivia_db.sql.
+-- Keep this file for upgrading existing databases created before that update.
 
 CREATE TABLE IF NOT EXISTS `login_attempts` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,

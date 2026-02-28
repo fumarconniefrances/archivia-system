@@ -75,6 +75,40 @@ CREATE TABLE `logs` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `login_attempts`
+--
+
+CREATE TABLE `login_attempts` (
+  `id` int(10) unsigned NOT NULL,
+  `login_key` varchar(190) NOT NULL,
+  `ip_address` varchar(45) NOT NULL,
+  `attempt_count` int(10) unsigned NOT NULL DEFAULT 0,
+  `first_attempt_ts` int(10) unsigned NOT NULL DEFAULT 0,
+  `last_attempt_ts` int(10) unsigned NOT NULL DEFAULT 0,
+  `blocked_until_ts` int(10) unsigned NOT NULL DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `organization_chart_members`
+--
+
+CREATE TABLE `organization_chart_members` (
+  `id` int(10) unsigned NOT NULL,
+  `name` varchar(120) NOT NULL,
+  `position_title` varchar(120) NOT NULL,
+  `photo_data` longtext DEFAULT NULL,
+  `sort_order` int(11) NOT NULL DEFAULT 0,
+  `is_active` tinyint(1) NOT NULL DEFAULT 1,
+  `created_by` int(10) unsigned DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `students`
 --
 
@@ -138,6 +172,31 @@ CREATE TABLE `users` (
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `system_settings`
+--
+
+CREATE TABLE `system_settings` (
+  `setting_key` varchar(80) NOT NULL,
+  `setting_value` text DEFAULT NULL,
+  `updated_by` int(10) unsigned DEFAULT NULL,
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Seed credentials (change passwords immediately after first login)
+-- ADMIN: admin@archivia.local / Admin@123
+-- RECORD_OFFICER: officer@archivia.local / Officer@123
+--
+
+INSERT INTO `users` (`id`, `name`, `email`, `password`, `role`, `status`, `department`, `last_login_at`, `created_at`, `updated_at`) VALUES
+(1, 'System Administrator', 'admin@archivia.local', '$2y$10$TbvxWxgMRhn1BOdViknceOlNnp4VFb04/sj5m.2X.rJ97hkiVDb4m', 'ADMIN', 'ACTIVE', 'Administration', NULL, current_timestamp(), current_timestamp()),
+(2, 'Records Officer', 'officer@archivia.local', '$2y$10$X7dpg39CBnpSMuH8SKtbke1pilLtEYtxk1wrXyl1qUtkD.XKLVsMe', 'RECORD_OFFICER', 'ACTIVE', 'Records', NULL, current_timestamp(), current_timestamp());
+
 --
 -- Indexes for dumped tables
 --
@@ -172,6 +231,23 @@ ALTER TABLE `logs`
   ADD KEY `idx_logs_entity_type` (`entity_type`),
   ADD KEY `idx_logs_created_at` (`created_at`),
   ADD KEY `idx_logs_entity_lookup` (`entity_type`,`entity_id`,`created_at`);
+
+--
+-- Indexes for table `login_attempts`
+--
+ALTER TABLE `login_attempts`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `uq_login_attempts_key_ip` (`login_key`,`ip_address`),
+  ADD KEY `idx_login_attempts_last_attempt` (`last_attempt_ts`),
+  ADD KEY `idx_login_attempts_blocked_until` (`blocked_until_ts`);
+
+--
+-- Indexes for table `organization_chart_members`
+--
+ALTER TABLE `organization_chart_members`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_org_chart_active_sort` (`is_active`,`sort_order`,`id`),
+  ADD KEY `idx_org_chart_created_by` (`created_by`);
 
 --
 -- Indexes for table `students`
@@ -212,6 +288,13 @@ ALTER TABLE `users`
   ADD KEY `idx_users_status` (`status`);
 
 --
+-- Indexes for table `system_settings`
+--
+ALTER TABLE `system_settings`
+  ADD PRIMARY KEY (`setting_key`),
+  ADD KEY `idx_system_settings_updated_by` (`updated_by`);
+
+--
 -- AUTO_INCREMENT for dumped tables
 --
 
@@ -232,6 +315,18 @@ ALTER TABLE `document_groups`
 --
 ALTER TABLE `logs`
   MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `login_attempts`
+--
+ALTER TABLE `login_attempts`
+  MODIFY `id` int(10) unsigned NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `organization_chart_members`
+--
+ALTER TABLE `organization_chart_members`
+  MODIFY `id` int(10) unsigned NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `students`
@@ -282,10 +377,22 @@ ALTER TABLE `logs`
   ADD CONSTRAINT `fk_logs_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 --
+-- Constraints for table `organization_chart_members`
+--
+ALTER TABLE `organization_chart_members`
+  ADD CONSTRAINT `fk_org_chart_created_by` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+--
 -- Constraints for table `system_backups`
 --
 ALTER TABLE `system_backups`
   ADD CONSTRAINT `fk_system_backups_created_by` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+--
+-- Constraints for table `system_settings`
+--
+ALTER TABLE `system_settings`
+  ADD CONSTRAINT `fk_system_settings_updated_by` FOREIGN KEY (`updated_by`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 --
 -- Constraints for table `teacher_assignments`
