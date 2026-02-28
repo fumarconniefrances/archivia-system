@@ -8,16 +8,14 @@
     "lint:css": "stylelint assets/css/main.css",
     "lint:html": "htmlhint \"*.html\"",
     "format": "prettier --write \"*.html\" \"assets/**/*.{css,js}\"",
-    "format:check": "prettier --check \"*.html\" \"assets/**/*.{css,js}\"",
-    "test:visual": "playwright test"
+    "format:check": "prettier --check \"*.html\" \"assets/**/*.{css,js}\""
   },
   "devDependencies": {
-    "@playwright/test": "^1.52.0",
     "eslint": "^9.26.0",
     "eslint-config-prettier": "^10.1.2",
     "htmlhint": "^1.1.4",
-    "prettier": "^3.5.3",
     "nodemon": "^3.1.10",
+    "prettier": "^3.5.3",
     "stylelint": "^16.18.0",
     "stylelint-config-standard": "^37.0.0"
   }

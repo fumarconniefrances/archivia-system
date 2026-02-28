@@ -15,7 +15,6 @@ ARCHIVA/
       SPEDlogo.jpg
     js/
       app.js
-      mock-data.js
       services/
         api.js
       pages/

@@ -39,12 +39,11 @@ Confirm file created in `C:\ARCHIVIA_BACKUPS\LOCAL\`.
 Check log:
 `C:\ARCHIVIA_BACKUPS\backup_log.txt`
 
-## Restore Test (Use Test DB)
+## Restore Validation
 
-1. Create test database: `archivia_db_test`
-2. Restore:
+1. Restore:
    `C:\xampp\mysql\bin\mysql.exe -u archivia_user -p archivia_test_restore < C:\ARCHIVIA_BACKUPS\LOCAL\archivia_backup_YYYYMMDD_HHMMSS.sql`
-3. Validate row counts and critical tables.
+2. Validate row counts and critical tables.
 
 ## Weekly Compression (Optional)
 
