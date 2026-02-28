@@ -26,7 +26,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
   function createDocumentInputRow(withRemove) {
     var row = document.createElement('div');
-    row.className = 'form-field';
+    row.className = 'form-field doc-row-inline';
     row.setAttribute('data-doc-row', '1');
 
     var input = document.createElement('input');
@@ -38,8 +38,10 @@ document.addEventListener('DOMContentLoaded', async function () {
     if (withRemove) {
       var removeBtn = document.createElement('button');
       removeBtn.type = 'button';
-      removeBtn.className = 'btn btn-danger table-top-gap';
-      removeBtn.textContent = 'Remove';
+      removeBtn.className = 'btn btn-secondary doc-remove-btn';
+      removeBtn.textContent = 'X';
+      removeBtn.setAttribute('aria-label', 'Remove document field');
+      removeBtn.title = 'Remove document field';
       removeBtn.addEventListener('click', function () {
         row.remove();
       });
