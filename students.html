@@ -112,9 +112,14 @@
           <datalist id="adviserSuggestions"></datalist>
         </div>
         <div class="form-field">
-          <label class="label" for="studentInitialDoc">Initial Student Document (Scanned Image/PDF/DOCX)</label>
-          <input class="input" id="studentInitialDoc" type="file" accept="image/*,application/pdf,.docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" multiple />
-          <p class="muted">Optional. Supports multiple files (up to 10). JPG/PNG/WEBP/PDF/DOCX, max 10MB each.</p>
+          <label class="label">Student Documents (Optional)</label>
+          <div id="studentDocumentsList">
+            <div class="form-field" data-doc-row>
+              <input class="input student-doc-input" type="file" accept="image/*,application/pdf,.docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" />
+            </div>
+          </div>
+          <button class="btn btn-secondary table-top-gap" id="addStudentDocFieldBtn" type="button">Add Another Document</button>
+          <p class="muted">Upload up to 10 documents (JPG/PNG/WEBP/PDF/DOCX, max 10MB each).</p>
         </div>
       </div>
       <div class="modal-foot">

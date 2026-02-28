@@ -13,7 +13,8 @@ document.addEventListener('DOMContentLoaded', async function () {
   var studentAdviserInput = document.getElementById('studentAdviser');
   var adviserSuggestions = document.getElementById('adviserSuggestions');
   var advisers = [];
-  var studentInitialDocInput = document.getElementById('studentInitialDoc');
+  var studentDocumentsList = document.getElementById('studentDocumentsList');
+  var addStudentDocFieldBtn = document.getElementById('addStudentDocFieldBtn');
   var schoolYearSection = document.getElementById('schoolYearSection');
   var yearStudentsSection = document.getElementById('yearStudentsSection');
   var schoolYearTableBody = document.getElementById('schoolYearTableBody');
@@ -22,6 +23,46 @@ document.addEventListener('DOMContentLoaded', async function () {
   var sexFilter = document.getElementById('sexFilter');
   var activeYearStudents = [];
   var yearsSet = new Set();
+
+  function createDocumentInputRow(withRemove) {
+    var row = document.createElement('div');
+    row.className = 'form-field';
+    row.setAttribute('data-doc-row', '1');
+
+    var input = document.createElement('input');
+    input.className = 'input student-doc-input';
+    input.type = 'file';
+    input.accept = 'image/*,application/pdf,.docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+    row.appendChild(input);
+
+    if (withRemove) {
+      var removeBtn = document.createElement('button');
+      removeBtn.type = 'button';
+      removeBtn.className = 'btn btn-danger table-top-gap';
+      removeBtn.textContent = 'Remove';
+      removeBtn.addEventListener('click', function () {
+        row.remove();
+      });
+      row.appendChild(removeBtn);
+    }
+    return row;
+  }
+
+  function resetStudentDocumentRows() {
+    if (!studentDocumentsList) return;
+    studentDocumentsList.innerHTML = '';
+    studentDocumentsList.appendChild(createDocumentInputRow(false));
+  }
+
+  function collectStudentDocumentFiles() {
+    if (!studentDocumentsList) return [];
+    var files = [];
+    var inputs = studentDocumentsList.querySelectorAll('.student-doc-input');
+    inputs.forEach(function (input) {
+      if (input.files && input.files[0]) files.push(input.files[0]);
+    });
+    return files;
+  }
 
   function getStudentYear(student) {
     if (typeof student.batchYear === 'number' && student.batchYear >= 1988) return student.batchYear;
@@ -246,7 +287,19 @@ document.addEventListener('DOMContentLoaded', async function () {
   }
   if (addStudentBtn) {
     addStudentBtn.addEventListener('click', function () {
+      resetStudentDocumentRows();
       window.ArchiviaUI.openModal('#addStudentModal');
+    });
+  }
+  if (addStudentDocFieldBtn) {
+    addStudentDocFieldBtn.addEventListener('click', function () {
+      if (!studentDocumentsList) return;
+      var currentRows = studentDocumentsList.querySelectorAll('[data-doc-row]').length;
+      if (currentRows >= 10) {
+        window.ArchiviaUI.showToast('You can add up to 10 document fields only.');
+        return;
+      }
+      studentDocumentsList.appendChild(createDocumentInputRow(true));
     });
   }
   if (saveStudentBtn) {
@@ -258,7 +311,7 @@ document.addEventListener('DOMContentLoaded', async function () {
       var schoolYear = studentSchoolYearInput ? parseSchoolYear(studentSchoolYearInput.value) : 0;
       var sex = studentSexInput ? studentSexInput.value : '';
       var adviserName = studentAdviserInput ? studentAdviserInput.value.trim() : '';
-      var initialDocFiles = studentInitialDocInput && studentInitialDocInput.files ? Array.from(studentInitialDocInput.files) : [];
+      var initialDocFiles = collectStudentDocumentFiles();
 
       if (!studentId || !fullName || !gradeLevel || !section || !schoolYear || !sex) {
         window.ArchiviaUI.showToast('Please complete all required fields.');
@@ -319,7 +372,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         if (studentSexInput) studentSexInput.value = '';
         if (studentSchoolYearInput) studentSchoolYearInput.value = '';
         if (studentAdviserInput) studentAdviserInput.value = '';
-        if (studentInitialDocInput) studentInitialDocInput.value = '';
+        resetStudentDocumentRows();
         window.ArchiviaUI.closeModal('#addStudentModal');
         await load();
         window.ArchiviaUI.showToast(initialDocFiles.length ? 'Student and documents saved.' : 'Student record saved.');
@@ -338,5 +391,6 @@ document.addEventListener('DOMContentLoaded', async function () {
     sexFilter.addEventListener('change', applySexFilter);
   }
 
+  resetStudentDocumentRows();
   await load();
 });
