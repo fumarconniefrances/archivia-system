@@ -108,9 +108,8 @@
         </div>
         <div class="form-field">
           <label class="label" for="studentAdviser">Adviser (Optional)</label>
-          <select class="select" id="studentAdviser">
-            <option value="">No adviser selected</option>
-          </select>
+          <input class="input" id="studentAdviser" list="adviserSuggestions" placeholder="Type adviser name" />
+          <datalist id="adviserSuggestions"></datalist>
         </div>
         <div class="form-field">
           <label class="label" for="studentInitialDoc">Initial Student Document (Scanned Image/PDF/DOCX)</label>

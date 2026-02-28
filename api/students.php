@@ -91,6 +91,7 @@ if ($method === 'POST') {
   $batchYear = filter_var($batchYearRaw, FILTER_VALIDATE_INT);
   $adviserIdRaw = $data['adviser_id'] ?? null;
   $adviserId = ($adviserIdRaw === null || $adviserIdRaw === '') ? 0 : (int)$adviserIdRaw;
+  $adviserName = trim((string)($data['adviser_name'] ?? ''));
 
   $errors = [];
   if ($studentId === '') $errors['student_id'] = 'student_id is required';
@@ -103,6 +104,7 @@ if ($method === 'POST') {
   check_max_length('last_name', $lastName, 100, $errors);
   check_max_length('grade_level', isset($data['grade_level']) ? trim((string)$data['grade_level']) : null, 50, $errors);
   check_max_length('section', isset($data['section']) ? trim((string)$data['section']) : null, 50, $errors);
+  check_max_length('adviser_name', $adviserName !== '' ? $adviserName : null, 100, $errors);
   if ($adviserId < 0) $errors['adviser_id'] = 'adviser_id must be valid';
   if (!empty($errors)) validation_error_response($errors);
 
@@ -130,6 +132,17 @@ if ($method === 'POST') {
     ]);
     $id = (int)$pdo->lastInsertId();
 
+    if ($adviserId <= 0 && $adviserName !== '') {
+      $stmt = $pdo->prepare('SELECT id FROM users WHERE role = "RECORD_OFFICER" AND status = "ACTIVE" AND (LOWER(name) = LOWER(:name) OR LOWER(email) = LOWER(:name)) LIMIT 1');
+      $stmt->execute([':name' => $adviserName]);
+      $matched = $stmt->fetch();
+      if (!$matched) {
+        $pdo->rollBack();
+        error_response('Selected adviser is invalid.', 422);
+      }
+      $adviserId = (int)$matched['id'];
+    }
+
     if ($adviserId > 0) {
       $stmt = $pdo->prepare('SELECT id FROM users WHERE id = :id AND role = "RECORD_OFFICER" AND status = "ACTIVE" LIMIT 1');
       $stmt->execute([':id' => $adviserId]);
@@ -152,6 +165,7 @@ if ($method === 'POST') {
       'batch_year' => (int)$batchYear,
       'grade_level' => isset($data['grade_level']) ? trim((string)$data['grade_level']) : null,
       'section' => isset($data['section']) ? trim((string)$data['section']) : null,
+      'adviser_name' => $adviserName !== '' ? $adviserName : null,
       'adviser_id' => $adviserId > 0 ? $adviserId : null
     ]);
     $pdo->commit();

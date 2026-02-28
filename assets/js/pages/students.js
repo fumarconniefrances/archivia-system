@@ -11,6 +11,8 @@ document.addEventListener('DOMContentLoaded', async function () {
   var studentSexInput = document.getElementById('studentSex');
   var studentSchoolYearInput = document.getElementById('studentSchoolYear');
   var studentAdviserInput = document.getElementById('studentAdviser');
+  var adviserSuggestions = document.getElementById('adviserSuggestions');
+  var advisers = [];
   var studentInitialDocInput = document.getElementById('studentInitialDoc');
   var schoolYearSection = document.getElementById('schoolYearSection');
   var yearStudentsSection = document.getElementById('yearStudentsSection');
@@ -197,18 +199,20 @@ document.addEventListener('DOMContentLoaded', async function () {
       }, 1);
       if (studentAdviserInput) {
         try {
-          var advisers = await window.ArchiviaApi.withRetry(function () {
+          advisers = await window.ArchiviaApi.withRetry(function () {
             return window.ArchiviaApi.getTeachers();
           }, 1);
-          studentAdviserInput.innerHTML = '<option value="">No adviser selected</option>';
-          advisers.forEach(function (teacher) {
-            var opt = document.createElement('option');
-            opt.value = String(teacher.id);
-            opt.textContent = teacher.name + (teacher.department ? ' - ' + teacher.department : '');
-            studentAdviserInput.appendChild(opt);
-          });
+          if (adviserSuggestions) {
+            adviserSuggestions.innerHTML = '';
+            advisers.forEach(function (teacher) {
+              var opt = document.createElement('option');
+              opt.value = teacher.name || '';
+              adviserSuggestions.appendChild(opt);
+            });
+          }
         } catch (_adviserErr) {
-          studentAdviserInput.innerHTML = '<option value="">No adviser selected</option>';
+          advisers = [];
+          if (adviserSuggestions) adviserSuggestions.innerHTML = '';
         }
       }
       buildYearsSet(all);
@@ -253,7 +257,7 @@ document.addEventListener('DOMContentLoaded', async function () {
       var section = studentSectionInput ? studentSectionInput.value.trim() : '';
       var schoolYear = studentSchoolYearInput ? parseSchoolYear(studentSchoolYearInput.value) : 0;
       var sex = studentSexInput ? studentSexInput.value : '';
-      var adviserId = studentAdviserInput ? Number(studentAdviserInput.value || 0) : 0;
+      var adviserName = studentAdviserInput ? studentAdviserInput.value.trim() : '';
       var initialDocFiles = studentInitialDocInput && studentInitialDocInput.files ? Array.from(studentInitialDocInput.files) : [];
 
       if (!studentId || !fullName || !gradeLevel || !section || !schoolYear || !sex) {
@@ -272,6 +276,17 @@ document.addEventListener('DOMContentLoaded', async function () {
       var nameParts = fullName.split(' ').filter(Boolean);
       var firstName = nameParts.shift() || '';
       var lastName = nameParts.join(' ');
+      var matchedAdviser = adviserName ? advisers.find(function (t) {
+        var name = String(t.name || '').trim().toLowerCase();
+        var email = String(t.email || '').trim().toLowerCase();
+        var input = adviserName.toLowerCase();
+        return name === input || email === input;
+      }) : null;
+
+      if (adviserName && !matchedAdviser) {
+        window.ArchiviaUI.showToast('Adviser not found. Please type an existing teacher name.');
+        return;
+      }
 
       try {
         var created = await window.ArchiviaApi.withRetry(function () {
@@ -283,7 +298,8 @@ document.addEventListener('DOMContentLoaded', async function () {
             batch_year: schoolYear,
             grade_level: gradeLevel,
             section: section,
-            adviser_id: adviserId > 0 ? adviserId : null
+            adviser_id: matchedAdviser ? Number(matchedAdviser.id) : null,
+            adviser_name: adviserName || null
           });
         }, 1);
 
